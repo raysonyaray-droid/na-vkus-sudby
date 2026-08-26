@@ -1,5 +1,159 @@
-import { useState } from "react";
-import { cuisines, tasks } from "./data";
+import { useEffect, useRef, useState } from "react";
+import { cuisines, tasks, mapCountries } from "./data";
+
+function WorldMap({ onBack }) {
+  const mapRef = useRef(null);
+  const mapInstance = useRef(null);
+
+  useEffect(() => {
+    if (!window.L || !mapRef.current || mapInstance.current) return;
+
+    const L = window.L;
+
+    const map = L.map(mapRef.current, {
+      center: [25, 15],
+      zoom: 2,
+      minZoom: 2,
+      maxZoom: 6,
+      zoomControl: false,
+      worldCopyJump: true,
+    });
+
+    mapInstance.current = map;
+
+    L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      }
+    ).addTo(map);
+
+    L.control
+      .zoom({
+        position: "bottomright",
+      })
+      .addTo(map);
+
+    mapCountries.forEach((country) => {
+      const pin = L.divIcon({
+        className: "custom-map-pin-wrapper",
+        html: `
+          <div class="custom-map-pin">
+            <span>${country.emoji}</span>
+          </div>
+        `,
+        iconSize: [46, 46],
+        iconAnchor: [23, 43],
+        popupAnchor: [0, -40],
+      });
+
+      const restaurants = cuisines.find(
+        (cuisine) => cuisine.id === country.cuisineId
+      )?.restaurants || [];
+
+      const restaurantList = restaurants
+        .map(
+          (restaurant) =>
+            `<div class="map-restaurant">${restaurant.name}</div>`
+        )
+        .join("");
+
+      const popup = `
+        <div class="map-popup">
+          <div class="map-popup-country">
+            ${country.emoji} ${country.country}
+          </div>
+
+          <div class="map-popup-cuisine">
+            ${country.cuisineName}
+          </div>
+
+          <div class="map-popup-line"></div>
+
+          <div class="map-popup-label">
+            ГДЕ МОЖНО СХОДИТЬ
+          </div>
+
+          ${restaurantList}
+        </div>
+      `;
+
+      L.marker([country.lat, country.lng], {
+        icon: pin,
+      })
+        .addTo(map)
+        .bindPopup(popup, {
+          maxWidth: 260,
+          className: "destiny-popup",
+        });
+    });
+
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
+
+    return () => {
+      map.remove();
+      mapInstance.current = null;
+    };
+  }, []);
+
+  return (
+    <section className="map-screen">
+      <div className="map-header">
+        <button
+          className="map-back"
+          onClick={onBack}
+        >
+          ←
+        </button>
+
+        <div>
+          <div className="eyebrow map-eyebrow">
+            SONYA × SASHA
+          </div>
+
+          <h2 className="map-title">
+            НАША
+            <br />
+            КАРТА
+          </h2>
+        </div>
+      </div>
+
+      <div className="map-intro">
+        <span>🌍</span>
+        <p>
+          Каждая кухня —
+          <br />
+          ещё одна точка нашей истории.
+        </p>
+      </div>
+
+      <div
+        ref={mapRef}
+        className="world-map"
+      />
+
+      <div className="map-legend">
+        <span>📍</span>
+        <p>
+          Пока здесь отмечены кухни,
+          <br />
+          которые ждут своего свидания.
+        </p>
+      </div>
+
+      <button
+        onClick={onBack}
+        className="secondary-button map-back-button"
+      >
+        ← НАЗАД
+      </button>
+    </section>
+  );
+}
 
 function App() {
   const [screen, setScreen] = useState("home");
@@ -19,7 +173,9 @@ function App() {
 
     const randomFact =
       randomCuisine.facts[
-        Math.floor(Math.random() * randomCuisine.facts.length)
+        Math.floor(
+          Math.random() * randomCuisine.facts.length
+        )
       ];
 
     setCuisine(randomCuisine);
@@ -56,11 +212,21 @@ function App() {
 
     function formatICSDate(dateObject) {
       const yyyy = dateObject.getFullYear();
-      const mm = String(dateObject.getMonth() + 1).padStart(2, "0");
-      const dd = String(dateObject.getDate()).padStart(2, "0");
-      const hh = String(dateObject.getHours()).padStart(2, "0");
-      const min = String(dateObject.getMinutes()).padStart(2, "0");
-      const ss = String(dateObject.getSeconds()).padStart(2, "0");
+      const mm = String(
+        dateObject.getMonth() + 1
+      ).padStart(2, "0");
+      const dd = String(
+        dateObject.getDate()
+      ).padStart(2, "0");
+      const hh = String(
+        dateObject.getHours()
+      ).padStart(2, "0");
+      const min = String(
+        dateObject.getMinutes()
+      ).padStart(2, "0");
+      const ss = String(
+        dateObject.getSeconds()
+      ).padStart(2, "0");
 
       return `${yyyy}${mm}${dd}T${hh}${min}${ss}`;
     }
@@ -73,7 +239,8 @@ function App() {
         .replace(/;/g, "\\;");
     }
 
-    const title = `На вкус судьбы · ${cuisine.name}`;
+    const title =
+      `На вкус судьбы · ${cuisine.name}`;
 
     const description = [
       `Ресторан: ${selectedRestaurant.name}`,
@@ -90,7 +257,9 @@ function App() {
     ].join("\n");
 
     const uid =
-      `${Date.now()}-${Math.random().toString(36).substring(2)}@navkus-sudby`;
+      `${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2)}@navkus-sudby`;
 
     const icsContent = [
       "BEGIN:VCALENDAR",
@@ -105,7 +274,9 @@ function App() {
       `DTEND:${formatICSDate(endDate)}`,
       `SUMMARY:${escapeICS(title)}`,
       `DESCRIPTION:${escapeICS(description)}`,
-      `LOCATION:${escapeICS(selectedRestaurant.address)}`,
+      `LOCATION:${escapeICS(
+        selectedRestaurant.address
+      )}`,
       "STATUS:CONFIRMED",
       "END:VEVENT",
       "END:VCALENDAR",
@@ -173,11 +344,26 @@ function App() {
             ОТДАТЬСЯ СУДЬБЕ
           </button>
 
+          <button
+            onClick={() => setScreen("map")}
+            className="secondary-button home-map-button"
+          >
+            🌍 НАША КАРТА
+          </button>
+
           <p className="hint">
             кухня · ресторан · задание
           </p>
 
         </section>
+      )}
+
+      {/* КАРТА */}
+
+      {screen === "map" && (
+        <WorldMap
+          onBack={() => setScreen("home")}
+        />
       )}
 
       {/* КУХНЯ */}
@@ -193,9 +379,7 @@ function App() {
             {cuisine.emoji}
           </div>
 
-          <h2>
-            {cuisine.name}
-          </h2>
+          <h2>{cuisine.name}</h2>
 
           <div className="mood">
             {cuisine.mood}
@@ -274,33 +458,35 @@ function App() {
           </p>
 
           <div className="restaurants">
+            {cuisine.restaurants.map(
+              (restaurant, index) => (
+                <div
+                  key={restaurant.id}
+                  className="restaurant-card"
+                  onClick={() =>
+                    chooseRestaurant(restaurant)
+                  }
+                >
+                  <div className="restaurant-number">
+                    0{index + 1}
+                  </div>
 
-            {cuisine.restaurants.map((restaurant, index) => (
-              <div
-                key={restaurant.id}
-                className="restaurant-card"
-                onClick={() => chooseRestaurant(restaurant)}
-              >
+                  <div className="restaurant-info">
+                    <strong>
+                      {restaurant.name}
+                    </strong>
 
-                <div className="restaurant-number">
-                  0{index + 1}
+                    <span>
+                      {restaurant.address}
+                    </span>
+                  </div>
+
+                  <div className="restaurant-arrow">
+                    →
+                  </div>
                 </div>
-
-                <div className="restaurant-info">
-                  <strong>{restaurant.name}</strong>
-
-                  <span>
-                    {restaurant.address}
-                  </span>
-                </div>
-
-                <div className="restaurant-arrow">
-                  →
-                </div>
-
-              </div>
-            ))}
-
+              )
+            )}
           </div>
 
           <button
@@ -465,7 +651,11 @@ function App() {
                 id="date"
                 type="date"
                 value={date}
-                min={new Date().toISOString().split("T")[0]}
+                min={
+                  new Date()
+                    .toISOString()
+                    .split("T")[0]
+                }
                 onChange={(event) =>
                   setDate(event.target.value)
                 }
@@ -497,7 +687,8 @@ function App() {
               </span>
 
               <strong>
-                🍽️ На вкус судьбы · {cuisine.name}
+                🍽️ На вкус судьбы ·{" "}
+                {cuisine.name}
                 <br />
                 <br />
                 {selectedRestaurant.name}
@@ -518,7 +709,9 @@ function App() {
             </p>
 
             <button
-              onClick={() => setScreen("restaurant-confirm")}
+              onClick={() =>
+                setScreen("restaurant-confirm")
+              }
               className="text-button"
             >
               назад
@@ -555,10 +748,7 @@ function App() {
             </p>
 
             <div className="task">
-
-              <span>
-                ВАШ ВЕЧЕР
-              </span>
+              <span>ВАШ ВЕЧЕР</span>
 
               <strong>
                 {cuisine.emoji} {cuisine.name}
@@ -571,19 +761,14 @@ function App() {
                 <br />
                 🕐 {time}
               </strong>
-
             </div>
 
             <div className="task">
-
-              <span>
-                ВАШЕ ЗАДАНИЕ
-              </span>
+              <span>ВАШЕ ЗАДАНИЕ</span>
 
               <strong>
                 {task}
               </strong>
-
             </div>
 
             <a
@@ -618,6 +803,13 @@ function App() {
               className="destiny-button"
             >
               🎲 НОВОЕ СВИДАНИЕ
+            </button>
+
+            <button
+              onClick={() => setScreen("map")}
+              className="secondary-button"
+            >
+              🌍 НАША КАРТА
             </button>
 
             <button
