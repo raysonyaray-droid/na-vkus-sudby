@@ -11,10 +11,15 @@ body,
   min-height: 100%;
 }
 
+html {
+  background: #f4efe7;
+}
+
 body {
   font-family: Arial, Helvetica, sans-serif;
   background: #f4efe7;
   color: #1d1d1b;
+  overscroll-behavior-y: none;
 }
 
 button,
@@ -478,33 +483,350 @@ h2 {
 
 /* =========================
    РАЗДЕЛЕНИЕ КНОПОК
-   ЭТО ГЛАВНЫЙ ФИКС
 ========================= */
 
-/* Кнопка после задания */
 .task + .secondary-button {
   margin-top: 20px;
 }
 
-/* Светлая после светлой */
 .secondary-button + .secondary-button {
   margin-top: 12px;
 }
 
-/* Чёрная после светлой */
 .secondary-button + .destiny-button {
   margin-top: 24px;
 }
 
-/* Светлая после чёрной */
 .destiny-button + .secondary-button {
   margin-top: 14px;
 }
 
-/* Текстовая после любой кнопки */
 .secondary-button + .text-button,
 .destiny-button + .text-button {
   margin-top: 18px;
+}
+
+/* =========================
+   КАРТА МИРА
+========================= */
+
+.map-screen {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  padding:
+    max(30px, env(safe-area-inset-top))
+    18px
+    max(45px, env(safe-area-inset-bottom));
+
+  display: flex;
+  flex-direction: column;
+
+  background: #f4efe7;
+
+  overflow-x: hidden;
+}
+
+.map-header {
+  width: 100%;
+  max-width: 900px;
+
+  margin: 0 auto;
+
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+
+  flex: 0 0 auto;
+}
+
+.map-back {
+  width: 42px;
+  height: 42px;
+
+  flex: 0 0 42px;
+
+  margin-top: 3px;
+  padding: 0;
+
+  border: 1px solid rgba(29, 29, 27, 0.16);
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.55);
+  color: #1d1d1b;
+
+  font-size: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-eyebrow {
+  margin-bottom: 10px;
+}
+
+.map-title {
+  font-size: clamp(38px, 10vw, 58px);
+}
+
+.map-intro {
+  width: 100%;
+  max-width: 900px;
+
+  margin: 25px auto 15px;
+  padding: 14px 17px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.48);
+
+  flex: 0 0 auto;
+}
+
+.map-intro span {
+  font-size: 27px;
+}
+
+.map-intro p {
+  margin: 0;
+
+  font-size: 12px;
+  line-height: 1.45;
+
+  opacity: 0.6;
+}
+
+/*
+  Контейнер Leaflet обязательно должен
+  иметь реальную фиксируемую высоту.
+*/
+
+.world-map {
+  position: relative;
+
+  width: 100%;
+  max-width: 1100px;
+
+  height: min(67vh, 620px);
+  min-height: 440px;
+
+  margin: 0 auto;
+
+  overflow: hidden;
+
+  border-radius: 24px;
+
+  border: 1px solid rgba(29, 29, 27, 0.1);
+
+  box-shadow:
+    0 15px 45px rgba(29, 29, 27, 0.08);
+
+  background: #d9d3c9;
+
+  z-index: 1;
+
+  isolation: isolate;
+
+  flex: 0 0 auto;
+}
+
+/* =========================
+   LEAFLET
+========================= */
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  background: #d9d3c9;
+
+  touch-action: pan-x pan-y;
+}
+
+.leaflet-tile-pane {
+  will-change: transform;
+}
+
+.leaflet-tile {
+  max-width: none !important;
+}
+
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.leaflet-control-zoom a {
+  width: 34px !important;
+  height: 34px !important;
+
+  line-height: 34px !important;
+
+  border: none !important;
+
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #1d1d1b !important;
+}
+
+/* =========================
+   БУЛАВКИ
+========================= */
+
+.destiny-pin-wrapper {
+  background: transparent !important;
+  border: none !important;
+}
+
+.destiny-pin {
+  width: 42px;
+  height: 42px;
+
+  border-radius: 50% 50% 50% 0;
+
+  transform: rotate(-45deg);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #1d1d1b;
+
+  box-shadow:
+    0 5px 14px rgba(0, 0, 0, 0.22);
+}
+
+/*
+  Никакой пульсации или анимации.
+*/
+
+.destiny-pin span {
+  transform: rotate(45deg);
+
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* =========================
+   POPUP
+========================= */
+
+.destiny-popup .leaflet-popup-content-wrapper {
+  padding: 0;
+
+  overflow: hidden;
+
+  border-radius: 18px;
+
+  background: #f4efe7;
+
+  box-shadow:
+    0 12px 35px rgba(29, 29, 27, 0.2);
+}
+
+.destiny-popup .leaflet-popup-content {
+  width: 225px !important;
+
+  margin: 0;
+
+  padding: 18px;
+}
+
+.destiny-popup .leaflet-popup-tip {
+  background: #f4efe7;
+}
+
+.destiny-popup .leaflet-popup-close-button {
+  top: 7px;
+  right: 7px;
+
+  color: #1d1d1b;
+
+  opacity: 0.45;
+}
+
+.map-popup-country {
+  padding-right: 20px;
+
+  font-size: 17px;
+  font-weight: 800;
+
+  line-height: 1.2;
+}
+
+.map-popup-cuisine {
+  margin-top: 6px;
+
+  font-size: 11px;
+
+  opacity: 0.5;
+}
+
+.map-popup-line {
+  height: 1px;
+
+  margin: 13px 0;
+
+  background: rgba(29, 29, 27, 0.1);
+}
+
+.map-popup-label {
+  margin-bottom: 9px;
+
+  font-size: 7px;
+  line-height: 1.3;
+
+  letter-spacing: 1.5px;
+
+  opacity: 0.4;
+}
+
+.map-restaurant {
+  padding: 8px 0;
+
+  border-bottom: 1px solid rgba(29, 29, 27, 0.07);
+
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.map-restaurant strong,
+.map-restaurant span {
+  display: block;
+}
+
+.map-restaurant strong {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.map-restaurant span {
+  margin-top: 3px;
+
+  font-size: 9px;
+
+  opacity: 0.5;
+}
+
+.map-restaurant:last-child {
+  border-bottom: none;
+}
+
+.map-back-button {
+  align-self: center;
+
+  margin-top: 18px;
+}
+
+.home-map-button {
+  margin-top: 12px;
 }
 
 /* =========================
@@ -564,289 +886,28 @@ h2 {
     margin-top: 22px;
   }
 }
-/* =========================
-   КАРТА МИРА
-========================= */
-
-.map-screen {
-  width: 100%;
-  min-height: 100vh;
-  padding: 30px 18px 45px;
-
-  display: flex;
-  flex-direction: column;
-
-  background: #f4efe7;
-}
-
-.map-header {
-  width: 100%;
-  max-width: 900px;
-
-  margin: 0 auto;
-
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.map-back {
-  width: 42px;
-  height: 42px;
-
-  flex: 0 0 42px;
-
-  margin-top: 3px;
-
-  border: 1px solid rgba(29, 29, 27, 0.16);
-  border-radius: 50%;
-
-  background: rgba(255, 255, 255, 0.55);
-  color: #1d1d1b;
-
-  font-size: 20px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.map-eyebrow {
-  margin-bottom: 10px;
-}
-
-.map-title {
-  font-size: clamp(38px, 10vw, 58px);
-}
-
-.map-intro {
-  width: 100%;
-  max-width: 900px;
-
-  margin: 25px auto 15px;
-  padding: 14px 17px;
-
-  display: flex;
-  align-items: center;
-  gap: 12px;
-
-  border-radius: 18px;
-
-  background: rgba(255, 255, 255, 0.48);
-}
-
-.map-intro span {
-  font-size: 27px;
-}
-
-.map-intro p {
-  margin: 0;
-
-  font-size: 12px;
-  line-height: 1.45;
-
-  opacity: 0.6;
-}
-
-.world-map {
-  width: 100%;
-  max-width: 1100px;
-  height: min(67vh, 620px);
-
-  margin: 0 auto;
-
-  overflow: hidden;
-
-  border-radius: 24px;
-
-  border: 1px solid rgba(29, 29, 27, 0.1);
-
-  box-shadow:
-    0 15px 45px rgba(29, 29, 27, 0.08);
-
-  background: #d9d3c9;
-
-  z-index: 1;
-}
-
-/* Убираем стандартный Leaflet-зелёный/синий визуальный шум */
-
-.leaflet-container {
-  font-family: Arial, Helvetica, sans-serif;
-  background: #d9d3c9;
-}
-
-.leaflet-control-zoom {
-  border: none !important;
-  box-shadow: none !important;
-}
-
-.leaflet-control-zoom a {
-  width: 34px !important;
-  height: 34px !important;
-
-  line-height: 34px !important;
-
-  border: none !important;
-
-  background: rgba(255, 255, 255, 0.9) !important;
-  color: #1d1d1b !important;
-}
-
-.custom-map-pin-wrapper {
-  background: transparent;
-  border: none;
-}
-
-.custom-map-pin {
-  width: 42px;
-  height: 42px;
-
-  border-radius: 50% 50% 50% 0;
-
-  transform: rotate(-45deg);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: #1d1d1b;
-
-  box-shadow:
-    0 5px 14px rgba(0, 0, 0, 0.22);
-}
-
-.custom-map-pin span {
-  transform: rotate(45deg);
-
-  font-size: 20px;
-}
-
-/* POPUP */
-
-.destiny-popup .leaflet-popup-content-wrapper {
-  padding: 0;
-
-  overflow: hidden;
-
-  border-radius: 18px;
-
-  background: #f4efe7;
-
-  box-shadow:
-    0 12px 35px rgba(29, 29, 27, 0.2);
-}
-
-.destiny-popup .leaflet-popup-content {
-  width: 225px !important;
-
-  margin: 0;
-
-  padding: 18px;
-}
-
-.destiny-popup .leaflet-popup-tip {
-  background: #f4efe7;
-}
-
-.map-popup-country {
-  font-size: 17px;
-  font-weight: 800;
-
-  line-height: 1.2;
-}
-
-.map-popup-cuisine {
-  margin-top: 6px;
-
-  font-size: 11px;
-
-  opacity: 0.5;
-}
-
-.map-popup-line {
-  height: 1px;
-
-  margin: 13px 0;
-
-  background: rgba(29, 29, 27, 0.1);
-}
-
-.map-popup-label {
-  margin-bottom: 9px;
-
-  font-size: 7px;
-  letter-spacing: 1.5px;
-
-  opacity: 0.4;
-}
-
-.map-restaurant {
-  padding: 8px 0;
-
-  border-bottom: 1px solid rgba(29, 29, 27, 0.07);
-
-  font-size: 11px;
-  line-height: 1.3;
-}
-
-.map-restaurant:last-child {
-  border-bottom: none;
-}
-
-.map-legend {
-  width: 100%;
-  max-width: 900px;
-
-  margin: 14px auto 0;
-  padding: 13px 15px;
-
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  border-radius: 15px;
-
-  background: rgba(255, 255, 255, 0.4);
-}
-
-.map-legend span {
-  font-size: 20px;
-}
-
-.map-legend p {
-  margin: 0;
-
-  font-size: 9px;
-  line-height: 1.4;
-
-  letter-spacing: 0.5px;
-
-  opacity: 0.5;
-}
-
-.map-back-button {
-  align-self: center;
-
-  margin-top: 18px;
-}
-
-.home-map-button {
-  margin-top: 12px;
-}
 
 /* =========================
    МОБИЛЬНАЯ КАРТА
 ========================= */
 
 @media (max-width: 600px) {
+
   .map-screen {
-    padding: 24px 12px 35px;
+    padding:
+      max(24px, env(safe-area-inset-top))
+      12px
+      max(35px, env(safe-area-inset-bottom));
   }
 
   .world-map {
+    width: 100%;
+
     height: 58vh;
+    height: 58dvh;
+
     min-height: 390px;
+    max-height: 590px;
 
     border-radius: 20px;
   }
@@ -862,8 +923,15 @@ h2 {
   .map-back {
     width: 38px;
     height: 38px;
+
     flex-basis: 38px;
   }
+
+  /*
+    На телефоне zoom жестами остаётся.
+    Кнопки + / - скрываем,
+    чтобы карта была визуально чище.
+  */
 
   .leaflet-control-zoom {
     display: none;
