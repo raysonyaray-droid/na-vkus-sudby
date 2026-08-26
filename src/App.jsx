@@ -1,11 +1,21 @@
 import { useState } from "react";
-import { cuisines, wildCards, tasks } from "./data";
+import { cuisines, tasks } from "./data";
 
 function App() {
   const [screen, setScreen] = useState("home");
+
   const [cuisine, setCuisine] = useState(null);
   const [task, setTask] = useState(null);
   const [fact, setFact] = useState(null);
+
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("19:00");
+
+  // ============================================================
+  // 🎲 СУДЬБА ВЫБИРАЕТ КУХНЮ
+  // ============================================================
 
   function startDestiny() {
     const randomCuisine =
@@ -22,22 +32,147 @@ function App() {
     setCuisine(randomCuisine);
     setTask(randomTask);
     setFact(randomFact);
+
+    setSelectedRestaurant(null);
+    setDate("");
+    setTime("19:00");
+
     setScreen("result");
   }
+
+  // ============================================================
+  // 🍽️ ВЫБОР РЕСТОРАНА
+  // ============================================================
+
+  function chooseRestaurant(restaurant) {
+    setSelectedRestaurant(restaurant);
+    setScreen("restaurant-confirm");
+  }
+
+  // ============================================================
+  // 📅 СОЗДАНИЕ CALENDAR EVENT
+  // ============================================================
+
+  function addToCalendar() {
+    if (!selectedRestaurant || !date || !time) {
+      return;
+    }
+
+    const [year, month, day] = date.split("-");
+    const [hours, minutes] = time.split(":");
+
+    const startDate = new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hours),
+      Number(minutes)
+    );
+
+    // Свидание длится 2 часа
+    const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+
+    function formatICSDate(dateObject) {
+      const yyyy = dateObject.getFullYear();
+      const mm = String(dateObject.getMonth() + 1).padStart(2, "0");
+      const dd = String(dateObject.getDate()).padStart(2, "0");
+      const hh = String(dateObject.getHours()).padStart(2, "0");
+      const min = String(dateObject.getMinutes()).padStart(2, "0");
+      const ss = String(dateObject.getSeconds()).padStart(2, "0");
+
+      return `${yyyy}${mm}${dd}T${hh}${min}${ss}`;
+    }
+
+    function escapeICS(text) {
+      return String(text || "")
+        .replace(/\\/g, "\\\\")
+        .replace(/\n/g, "\\n")
+        .replace(/,/g, "\\,")
+        .replace(/;/g, "\\;");
+    }
+
+    const title = `На вкус судьбы · ${cuisine.name}`;
+
+    const description = [
+      `🍽️ Ресторан: ${selectedRestaurant.name}`,
+      `📍 Адрес: ${selectedRestaurant.address}`,
+      `🍴 Кухня: ${cuisine.name}`,
+      "",
+      `💡 Знаете ли вы?`,
+      fact,
+      "",
+      `🎲 Задание вечера:`,
+      task,
+      "",
+      `На вкус судьбы`,
+    ].join("\n");
+
+    const location = selectedRestaurant.address;
+
+    const uid =
+      `${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2)}@navkus-sudby`;
+
+    const icsContent = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Na Vkus Sudby//RU",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      "BEGIN:VEVENT",
+      `UID:${uid}`,
+      `DTSTAMP:${formatICSDate(new Date())}`,
+      `DTSTART:${formatICSDate(startDate)}`,
+      `DTEND:${formatICSDate(endDate)}`,
+      `SUMMARY:${escapeICS(title)}`,
+      `DESCRIPTION:${escapeICS(description)}`,
+      `LOCATION:${escapeICS(location)}`,
+      "STATUS:CONFIRMED",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].join("\r\n");
+
+    const blob = new Blob([icsContent], {
+      type: "text/calendar;charset=utf-8",
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "na-vkus-sudby.ics";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1000);
+  }
+
+  // ============================================================
+  // 🔄 НАЧАТЬ ЗАНОВО
+  // ============================================================
 
   function restart() {
     setCuisine(null);
     setTask(null);
     setFact(null);
+    setSelectedRestaurant(null);
+    setDate("");
+    setTime("19:00");
+
     setScreen("home");
   }
 
+  // ============================================================
+  // 🏠 HOME
+  // ============================================================
+
   return (
     <main className="app">
-
-      {/* =========================
-          ГЛАВНЫЙ ЭКРАН
-      ========================== */}
 
       {screen === "home" && (
         <section className="home">
@@ -72,10 +207,9 @@ function App() {
         </section>
       )}
 
-
-      {/* =========================
-          КУХНЯ
-      ========================== */}
+      {/* ========================================================
+          🍴 КУХНЯ
+      ========================================================= */}
 
       {screen === "result" && cuisine && (
         <section className="result">
@@ -96,16 +230,19 @@ function App() {
             {cuisine.mood}
           </div>
 
+          {/* О КУХНЕ */}
+
           <div className="info-block">
 
-            <span>О КУХНЕ</span>
+            <span>
+              О КУХНЕ
+            </span>
 
             <p>
               {cuisine.description}
             </p>
 
           </div>
-
 
           {/* ФАКТ */}
 
@@ -121,8 +258,7 @@ function App() {
 
           </div>
 
-
-          {/* ЧТО ПОПРОБОВАТЬ */}
+          {/* БЛЮДА */}
 
           <div className="dishes">
 
@@ -131,6 +267,7 @@ function App() {
             </span>
 
             <div className="dish-list">
+
               {cuisine.dishes.map((dish) => (
                 <div
                   key={dish}
@@ -139,10 +276,10 @@ function App() {
                   {dish}
                 </div>
               ))}
+
             </div>
 
           </div>
-
 
           {/* ЗАДАНИЕ */}
 
@@ -158,14 +295,12 @@ function App() {
 
           </div>
 
-
           <button
             onClick={() => setScreen("restaurant")}
             className="secondary-button"
           >
             ПОКАЗАТЬ РЕСТОРАНЫ →
           </button>
-
 
           <button
             onClick={restart}
@@ -177,10 +312,9 @@ function App() {
         </section>
       )}
 
-
-      {/* =========================
-          РЕСТОРАНЫ
-      ========================== */}
+      {/* ========================================================
+          🍽️ РЕСТОРАНЫ
+      ========================================================= */}
 
       {screen === "restaurant" && cuisine && (
         <section className="result">
@@ -194,29 +328,27 @@ function App() {
           </div>
 
           <h2>
-            ВЫБЕРИТЕ РЕСТОРАН
+            ВЫБЕРИТЕ
+            <br />
+            РЕСТОРАН
           </h2>
 
           <p>
-            Судьба выбрала вам кухню.
+            Три места.
             <br />
-            Теперь у каждого есть право
-            выбрать место.
+            Один вечер.
+            <br />
+            Выбирайте.
           </p>
-
-
-          {/* РЕСТОРАНЫ */}
 
           <div className="restaurants">
 
             {cuisine.restaurants.map((restaurant, index) => (
 
-              <a
+              <div
                 key={restaurant.id}
-                href={restaurant.maps}
-                target="_blank"
-                rel="noreferrer"
                 className="restaurant-card"
+                onClick={() => chooseRestaurant(restaurant)}
               >
 
                 <div className="restaurant-number">
@@ -239,29 +371,11 @@ function App() {
                   →
                 </div>
 
-              </a>
+              </div>
 
             ))}
 
           </div>
-
-
-          {/* ВЫБОР */}
-
-          <div className="task">
-
-            <span>
-              КАК ЭТО РАБОТАЕТ
-            </span>
-
-            <strong>
-              Каждый из вас тайно выбирает
-              один ресторан. После этого
-              Судьба решает, куда вы идёте.
-            </strong>
-
-          </div>
-
 
           <button
             onClick={() => setScreen("choice")}
@@ -269,7 +383,6 @@ function App() {
           >
             МЫ ВЫБРАЛИ →
           </button>
-
 
           <button
             onClick={restart}
@@ -281,10 +394,72 @@ function App() {
         </section>
       )}
 
+      {/* ========================================================
+          🍷 ВЫБРАН РЕСТОРАН
+      ========================================================= */}
 
-      {/* =========================
-          ВЫБОР РЕСТОРАНА
-      ========================== */}
+      {screen === "restaurant-confirm" &&
+        cuisine &&
+        selectedRestaurant && (
+          <section className="result">
+
+            <div className="eyebrow">
+              ВЫ ВЫБРАЛИ
+            </div>
+
+            <div className="emoji">
+              🍽️
+            </div>
+
+            <h2>
+              {selectedRestaurant.name}
+            </h2>
+
+            <p>
+              {selectedRestaurant.address}
+            </p>
+
+            <a
+              href={selectedRestaurant.maps}
+              target="_blank"
+              rel="noreferrer"
+              className="secondary-button"
+            >
+              ОТКРЫТЬ НА КАРТЕ →
+            </a>
+
+            <div className="task">
+
+              <span>
+                КУХНЯ
+              </span>
+
+              <strong>
+                {cuisine.emoji} {cuisine.name}
+              </strong>
+
+            </div>
+
+            <button
+              onClick={() => setScreen("choice")}
+              className="destiny-button"
+            >
+              ВЫБРАТЬ ДАТУ →
+            </button>
+
+            <button
+              onClick={() => setScreen("restaurant")}
+              className="text-button"
+            >
+              выбрать другой ресторан
+            </button>
+
+          </section>
+        )}
+
+      {/* ========================================================
+          🎲 ВЫБОРЫ СДЕЛАНЫ
+      ========================================================= */}
 
       {screen === "choice" && cuisine && (
         <section className="result">
@@ -298,118 +473,160 @@ function App() {
           </div>
 
           <h2>
-            ВЫБОРЫ СДЕЛАНЫ
+            ВЫБОР
+            <br />
+            СДЕЛАН
           </h2>
 
           <p>
-            Вы оба выбрали ресторан.
+            Теперь осталось решить,
             <br />
-            Теперь ваше решение больше
-            не зависит от вас.
+            когда именно вы идёте.
           </p>
-
 
           <div className="task">
 
             <span>
-              СУДЬБА ГОВОРИТ
+              РЕСТОРАН
             </span>
 
             <strong>
-              Если вы выбрали одно и то же —
-              кажется, вы сегодня думаете
-              одинаково.
-              <br />
-              <br />
-              Если выбрали разное —
-              судьба сама разберётся.
+              {selectedRestaurant
+                ? selectedRestaurant.name
+                : "Выберите ресторан"}
             </strong>
 
           </div>
 
-
           <button
-            onClick={() => setScreen("destiny")}
+            onClick={() => setScreen("calendar")}
             className="destiny-button"
+            disabled={!selectedRestaurant}
           >
-            ПУСТЬ РЕШИТ СУДЬБА
+            ВЫБРАТЬ ДАТУ →
           </button>
-
 
           <button
             onClick={() => setScreen("restaurant")}
             className="text-button"
           >
-            изменить выбор
+            изменить ресторан
           </button>
 
         </section>
       )}
 
+      {/* ========================================================
+          📅 КАЛЕНДАРЬ
+      ========================================================= */}
 
-      {/* =========================
-          ФИНАЛ
-      ========================== */}
+      {screen === "calendar" &&
+        cuisine &&
+        selectedRestaurant && (
+          <section className="result">
 
-      {screen === "destiny" && cuisine && (
-        <section className="result">
+            <div className="eyebrow">
+              СВИДАНИЕ НАЗНАЧЕНО
+            </div>
 
-          <div className="eyebrow">
-            СУДЬБА РЕШИЛА
-          </div>
+            <div className="emoji">
+              📅
+            </div>
 
-          <div className="emoji">
-            ✨
-          </div>
+            <h2>
+              КОГДА
+              <br />
+              ИДЁМ?
+            </h2>
 
-          <h2>
-            СЕГОДНЯ
-            <br />
-            ВСЁ РЕШЕНО
-          </h2>
+            <p>
+              Выберите дату и время.
+              <br />
+              Остальное мы уже решили.
+            </p>
 
-          <p>
-            Вы сделали всё, что могли.
-            <br />
-            Дальше остаётся только идти.
-          </p>
+            {/* ДАТА */}
 
+            <div className="calendar-field">
 
-          <div className="task">
+              <label htmlFor="date">
+                ДАТА
+              </label>
 
-            <span>
-              ВАША КУХНЯ
-            </span>
+              <input
+                id="date"
+                type="date"
+                value={date}
+                min={
+                  new Date().toISOString().split("T")[0]
+                }
+                onChange={(event) =>
+                  setDate(event.target.value)
+                }
+              />
 
-            <strong>
-              {cuisine.emoji} {cuisine.name}
-            </strong>
+            </div>
 
-          </div>
+            {/* ВРЕМЯ */}
 
+            <div className="calendar-field">
 
-          <div className="task">
+              <label htmlFor="time">
+                ВРЕМЯ
+              </label>
 
-            <span>
-              ВАШЕ ЗАДАНИЕ
-            </span>
+              <input
+                id="time"
+                type="time"
+                value={time}
+                onChange={(event) =>
+                  setTime(event.target.value)
+                }
+              />
 
-            <strong>
-              {task}
-            </strong>
+            </div>
 
-          </div>
+            {/* ПРЕДПРОСМОТР */}
 
+            <div className="task">
 
-          <button
-            onClick={restart}
-            className="secondary-button"
-          >
-            НОВОЕ СВИДАНИЕ
-          </button>
+              <span>
+                В КАЛЕНДАРЬ ПОПАДЁТ
+              </span>
 
-        </section>
-      )}
+              <strong>
+                🍽️ На вкус судьбы · {cuisine.name}
+                <br />
+                <br />
+                {selectedRestaurant.name}
+              </strong>
+
+            </div>
+
+            <button
+              onClick={addToCalendar}
+              className="destiny-button"
+              disabled={!date}
+            >
+              📅 ДОБАВИТЬ В КАЛЕНДАРЬ
+            </button>
+
+            <p className="hint">
+              Файл откроется на iPhone.
+              <br />
+              Вы сможете добавить событие
+              в свой календарь.
+            </p>
+
+            <button
+              onClick={() => setScreen("restaurant-confirm")}
+              className="text-button"
+            >
+              назад
+            </button>
+
+          </section>
+        )}
 
     </main>
   );
