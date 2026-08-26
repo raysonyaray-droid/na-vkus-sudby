@@ -26,17 +26,15 @@ function WorldMap({ onBack }) {
     mapInstance.current = map;
 
     L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-      {
-        subdomains: "abcd",
-        maxZoom: 20,
-        attribution:
-          '&copy; OpenStreetMap contributors &copy; CARTO',
-        crossOrigin: true,
-        updateWhenIdle: true,
-        keepBuffer: 2,
-      }
-    ).addTo(map);
+  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  {
+    maxZoom: 19,
+    attribution:
+      '&copy; OpenStreetMap contributors',
+    updateWhenIdle: true,
+    keepBuffer: 4,
+  }
+).addTo(map);
 
     mapCountries.forEach((country) => {
       const cuisineData = cuisines.find(
