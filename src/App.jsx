@@ -3,19 +3,12 @@ import { cuisines, tasks } from "./data";
 
 function App() {
   const [screen, setScreen] = useState("home");
-
   const [cuisine, setCuisine] = useState(null);
   const [task, setTask] = useState(null);
   const [fact, setFact] = useState(null);
-
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
-
   const [date, setDate] = useState("");
   const [time, setTime] = useState("19:00");
-
-  // ============================================================
-  // 🎲 СУДЬБА ВЫБИРАЕТ КУХНЮ
-  // ============================================================
 
   function startDestiny() {
     const randomCuisine =
@@ -32,31 +25,19 @@ function App() {
     setCuisine(randomCuisine);
     setTask(randomTask);
     setFact(randomFact);
-
     setSelectedRestaurant(null);
     setDate("");
     setTime("19:00");
-
     setScreen("result");
   }
-
-  // ============================================================
-  // 🍽️ ВЫБОР РЕСТОРАНА
-  // ============================================================
 
   function chooseRestaurant(restaurant) {
     setSelectedRestaurant(restaurant);
     setScreen("restaurant-confirm");
   }
 
-  // ============================================================
-  // 📅 ДОБАВЛЕНИЕ В КАЛЕНДАРЬ
-  // ============================================================
-
   function addToCalendar() {
-    if (!selectedRestaurant || !date || !time) {
-      return;
-    }
+    if (!selectedRestaurant || !date || !time) return;
 
     const [year, month, day] = date.split("-");
     const [hours, minutes] = time.split(":");
@@ -95,25 +76,21 @@ function App() {
     const title = `На вкус судьбы · ${cuisine.name}`;
 
     const description = [
-      `🍽️ Ресторан: ${selectedRestaurant.name}`,
-      `📍 Адрес: ${selectedRestaurant.address}`,
-      `🍴 Кухня: ${cuisine.name}`,
+      `Ресторан: ${selectedRestaurant.name}`,
+      `Адрес: ${selectedRestaurant.address}`,
+      `Кухня: ${cuisine.name}`,
       "",
-      `💡 Знаете ли вы?`,
+      "Знаете ли вы?",
       fact,
       "",
-      `🎲 Задание вечера:`,
+      "Задание вечера:",
       task,
       "",
-      `На вкус судьбы`,
+      "На вкус судьбы · SONYA × SASHA",
     ].join("\n");
 
-    const location = selectedRestaurant.address;
-
     const uid =
-      `${Date.now()}-${Math.random()
-        .toString(36)
-        .substring(2)}@navkus-sudby`;
+      `${Date.now()}-${Math.random().toString(36).substring(2)}@navkus-sudby`;
 
     const icsContent = [
       "BEGIN:VCALENDAR",
@@ -128,7 +105,7 @@ function App() {
       `DTEND:${formatICSDate(endDate)}`,
       `SUMMARY:${escapeICS(title)}`,
       `DESCRIPTION:${escapeICS(description)}`,
-      `LOCATION:${escapeICS(location)}`,
+      `LOCATION:${escapeICS(selectedRestaurant.address)}`,
       "STATUS:CONFIRMED",
       "END:VEVENT",
       "END:VCALENDAR",
@@ -152,13 +129,8 @@ function App() {
       URL.revokeObjectURL(url);
     }, 1000);
 
-    // ⭐ После добавления переходим на финальный экран
     setScreen("final");
   }
-
-  // ============================================================
-  // 🔄 НАЧАТЬ ЗАНОВО
-  // ============================================================
 
   function restart() {
     setCuisine(null);
@@ -167,16 +139,13 @@ function App() {
     setSelectedRestaurant(null);
     setDate("");
     setTime("19:00");
-
     setScreen("home");
   }
 
   return (
     <main className="app">
 
-      {/* ========================================================
-          🏠 ГЛАВНАЯ
-      ========================================================= */}
+      {/* ГЛАВНАЯ */}
 
       {screen === "home" && (
         <section className="home">
@@ -211,9 +180,7 @@ function App() {
         </section>
       )}
 
-      {/* ========================================================
-          🍴 КУХНЯ
-      ========================================================= */}
+      {/* КУХНЯ */}
 
       {screen === "result" && cuisine && (
         <section className="result">
@@ -235,37 +202,19 @@ function App() {
           </div>
 
           <div className="info-block">
-
-            <span>
-              О КУХНЕ
-            </span>
-
-            <p>
-              {cuisine.description}
-            </p>
-
+            <span>О КУХНЕ</span>
+            <p>{cuisine.description}</p>
           </div>
 
           <div className="fact">
-
-            <span>
-              💡 ЗНАЕТЕ ЛИ ВЫ?
-            </span>
-
-            <p>
-              {fact}
-            </p>
-
+            <span>💡 ЗНАЕТЕ ЛИ ВЫ?</span>
+            <p>{fact}</p>
           </div>
 
           <div className="dishes">
-
-            <span>
-              ЧТО ПОПРОБОВАТЬ
-            </span>
+            <span>ЧТО ПОПРОБОВАТЬ</span>
 
             <div className="dish-list">
-
               {cuisine.dishes.map((dish) => (
                 <div
                   key={dish}
@@ -274,21 +223,12 @@ function App() {
                   {dish}
                 </div>
               ))}
-
             </div>
-
           </div>
 
           <div className="task">
-
-            <span>
-              ВАШЕ ЗАДАНИЕ
-            </span>
-
-            <strong>
-              {task}
-            </strong>
-
+            <span>ВАШЕ ЗАДАНИЕ</span>
+            <strong>{task}</strong>
           </div>
 
           <button
@@ -308,9 +248,7 @@ function App() {
         </section>
       )}
 
-      {/* ========================================================
-          🍽️ РЕСТОРАНЫ
-      ========================================================= */}
+      {/* РЕСТОРАНЫ */}
 
       {screen === "restaurant" && cuisine && (
         <section className="result">
@@ -338,7 +276,6 @@ function App() {
           <div className="restaurants">
 
             {cuisine.restaurants.map((restaurant, index) => (
-
               <div
                 key={restaurant.id}
                 className="restaurant-card"
@@ -350,15 +287,11 @@ function App() {
                 </div>
 
                 <div className="restaurant-info">
-
-                  <strong>
-                    {restaurant.name}
-                  </strong>
+                  <strong>{restaurant.name}</strong>
 
                   <span>
                     {restaurant.address}
                   </span>
-
                 </div>
 
                 <div className="restaurant-arrow">
@@ -366,7 +299,6 @@ function App() {
                 </div>
 
               </div>
-
             ))}
 
           </div>
@@ -388,9 +320,7 @@ function App() {
         </section>
       )}
 
-      {/* ========================================================
-          🍷 ПОДТВЕРЖДЕНИЕ РЕСТОРАНА
-      ========================================================= */}
+      {/* ПОДТВЕРЖДЕНИЕ РЕСТОРАНА */}
 
       {screen === "restaurant-confirm" &&
         cuisine &&
@@ -423,15 +353,11 @@ function App() {
             </a>
 
             <div className="task">
-
-              <span>
-                КУХНЯ
-              </span>
+              <span>КУХНЯ</span>
 
               <strong>
                 {cuisine.emoji} {cuisine.name}
               </strong>
-
             </div>
 
             <button
@@ -451,9 +377,7 @@ function App() {
           </section>
         )}
 
-      {/* ========================================================
-          🎲 ВЫБОР
-      ========================================================= */}
+      {/* ВЫБОР */}
 
       {screen === "choice" && cuisine && (
         <section className="result">
@@ -479,15 +403,11 @@ function App() {
           </p>
 
           <div className="task">
-
-            <span>
-              РЕСТОРАН
-            </span>
+            <span>РЕСТОРАН</span>
 
             <strong>
               {selectedRestaurant?.name}
             </strong>
-
           </div>
 
           <button
@@ -508,9 +428,7 @@ function App() {
         </section>
       )}
 
-      {/* ========================================================
-          📅 КАЛЕНДАРЬ
-      ========================================================= */}
+      {/* КАЛЕНДАРЬ */}
 
       {screen === "calendar" &&
         cuisine &&
@@ -547,11 +465,7 @@ function App() {
                 id="date"
                 type="date"
                 value={date}
-                min={
-                  new Date()
-                    .toISOString()
-                    .split("T")[0]
-                }
+                min={new Date().toISOString().split("T")[0]}
                 onChange={(event) =>
                   setDate(event.target.value)
                 }
@@ -613,9 +527,7 @@ function App() {
           </section>
         )}
 
-      {/* ========================================================
-          ✨ ФИНАЛ
-      ========================================================= */}
+      {/* ФИНАЛ */}
 
       {screen === "final" &&
         cuisine &&
@@ -638,6 +550,7 @@ function App() {
 
             <p>
               Теперь остаётся только
+              <br />
               дождаться этого дня.
             </p>
 
@@ -686,13 +599,11 @@ function App() {
               onClick={() => setScreen("calendar")}
               className="secondary-button"
             >
-              📅 ОТКРЫТЬ КАЛЕНДАРЬ
+              📅 ИЗМЕНИТЬ ДАТУ
             </button>
 
             <button
               onClick={() => {
-                // Пока просто заглушка.
-                // Вечером подключим сюда Supabase.
                 alert(
                   "После свидания здесь появится ваш отзыв ❤️"
                 );
