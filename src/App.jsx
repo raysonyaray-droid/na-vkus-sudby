@@ -21,25 +21,11 @@ function WorldMap({ onBack }) {
       attributionControl: true,
       worldCopyJump: true,
       preferCanvas: true,
-      scrollWheelZoom: true,
-      dragging: true,
-      touchZoom: true,
-      doubleClickZoom: true,
-      boxZoom: true,
-      keyboard: true,
     });
 
     mapInstance.current = map;
 
-    /*
-      КАРТА
-
-      Используем CARTO.
-      Карта остаётся обычной интерактивной картой мира:
-      движение, zoom, реальные страны и обычные тайлы.
-    */
-
-    const tileLayer = L.tileLayer(
+    L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
       {
         subdomains: "abcd",
@@ -48,18 +34,9 @@ function WorldMap({ onBack }) {
           '&copy; OpenStreetMap contributors &copy; CARTO',
         crossOrigin: true,
         updateWhenIdle: true,
-        keepBuffer: 4,
+        keepBuffer: 2,
       }
-    );
-
-    tileLayer.addTo(map);
-
-    /*
-      БУЛАВКИ
-
-      Каждая кухня связана со своей страной
-      через cuisineId в mapCountries.
-    */
+    ).addTo(map);
 
     mapCountries.forEach((country) => {
       const cuisineData = cuisines.find(
@@ -88,25 +65,17 @@ function WorldMap({ onBack }) {
         [country.lat, country.lng],
         {
           icon: pinIcon,
-          keyboard: true,
-          riseOnHover: true,
         }
       ).addTo(map);
 
-      const restaurants =
-        cuisineData.restaurants || [];
+      const restaurants = cuisineData.restaurants || [];
 
       const restaurantList = restaurants
         .map(
           (restaurant) => `
             <div class="map-restaurant">
-              <strong>
-                ${restaurant.name}
-              </strong>
-
-              <span>
-                ${restaurant.address}
-              </span>
+              <strong>${restaurant.name}</strong>
+              <span>${restaurant.address}</span>
             </div>
           `
         )
@@ -154,126 +123,40 @@ function WorldMap({ onBack }) {
         minWidth: 220,
         className: "destiny-popup",
         closeButton: true,
-        autoPan: true,
-        keepInView: true,
       });
     });
-
-    /*
-      FIX ДЛЯ REACT / МОБИЛЬНОГО SAFARI
-
-      Leaflet иногда создаётся до того,
-      как React окончательно рассчитает
-      размеры контейнера.
-
-      Поэтому несколько раз обновляем
-      размеры после появления экрана.
-    */
 
     const fixMapSize = () => {
       if (!mapInstance.current) {
         return;
       }
 
-      mapInstance.current.invalidateSize({
-        animate: false,
-        pan: false,
-      });
+      mapInstance.current.invalidateSize(false);
     };
 
-    const timers = [];
+    requestAnimationFrame(fixMapSize);
 
-    const scheduleFix = (delay) => {
-      const timer = window.setTimeout(
-        fixMapSize,
-        delay
-      );
+    const timer1 = setTimeout(fixMapSize, 100);
+    const timer2 = setTimeout(fixMapSize, 300);
+    const timer3 = setTimeout(fixMapSize, 700);
 
-      timers.push(timer);
-    };
-
-    requestAnimationFrame(() => {
-      fixMapSize();
-
-      requestAnimationFrame(
-        fixMapSize
-      );
-    });
-
-    scheduleFix(100);
-    scheduleFix(250);
-    scheduleFix(500);
-    scheduleFix(900);
-    scheduleFix(1500);
-
-    map.whenReady(() => {
-      fixMapSize();
-    });
-
-    tileLayer.on("load", fixMapSize);
-
-    window.addEventListener(
-      "resize",
-      fixMapSize
-    );
-
-    window.addEventListener(
-      "orientationchange",
-      fixMapSize
-    );
-
-    let resizeObserver = null;
-
-    if (
-      typeof ResizeObserver !==
-        "undefined" &&
-      mapRef.current
-    ) {
-      resizeObserver =
-        new ResizeObserver(() => {
-          fixMapSize();
-        });
-
-      resizeObserver.observe(
-        mapRef.current
-      );
-    }
+    window.addEventListener("resize", fixMapSize);
 
     return () => {
-      timers.forEach((timer) => {
-        window.clearTimeout(timer);
-      });
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
 
-      window.removeEventListener(
-        "resize",
-        fixMapSize
-      );
-
-      window.removeEventListener(
-        "orientationchange",
-        fixMapSize
-      );
-
-      tileLayer.off(
-        "load",
-        fixMapSize
-      );
-
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
+      window.removeEventListener("resize", fixMapSize);
 
       map.remove();
-
       mapInstance.current = null;
     };
   }, []);
 
   return (
     <section className="map-screen">
-
       <div className="map-header">
-
         <button
           className="map-back"
           onClick={onBack}
@@ -293,11 +176,9 @@ function WorldMap({ onBack }) {
             КАРТА
           </h2>
         </div>
-
       </div>
 
       <div className="map-intro">
-
         <span>🌍</span>
 
         <p>
@@ -305,7 +186,6 @@ function WorldMap({ onBack }) {
           <br />
           ещё одна точка нашей истории.
         </p>
-
       </div>
 
       <div
@@ -319,57 +199,45 @@ function WorldMap({ onBack }) {
       >
         ← НАЗАД
       </button>
-
     </section>
   );
 }
 
 function App() {
-  const [screen, setScreen] =
-    useState("home");
+  const [screen, setScreen] = useState("home");
 
-  const [cuisine, setCuisine] =
+  const [cuisine, setCuisine] = useState(null);
+
+  const [task, setTask] = useState(null);
+
+  const [fact, setFact] = useState(null);
+
+  const [selectedRestaurant, setSelectedRestaurant] =
     useState(null);
 
-  const [task, setTask] =
-    useState(null);
+  const [date, setDate] = useState("");
 
-  const [fact, setFact] =
-    useState(null);
-
-  const [
-    selectedRestaurant,
-    setSelectedRestaurant,
-  ] = useState(null);
-
-  const [date, setDate] =
-    useState("");
-
-  const [time, setTime] =
-    useState("19:00");
+  const [time, setTime] = useState("19:00");
 
   function startDestiny() {
     const randomCuisine =
       cuisines[
         Math.floor(
-          Math.random() *
-            cuisines.length
+          Math.random() * cuisines.length
         )
       ];
 
     const randomTask =
       tasks[
         Math.floor(
-          Math.random() *
-            tasks.length
+          Math.random() * tasks.length
         )
       ];
 
     const randomFact =
       randomCuisine.facts[
         Math.floor(
-          Math.random() *
-            randomCuisine.facts.length
+          Math.random() * randomCuisine.facts.length
         )
       ];
 
@@ -384,37 +252,20 @@ function App() {
     setScreen("result");
   }
 
-  function chooseRestaurant(
-    restaurant
-  ) {
-    setSelectedRestaurant(
-      restaurant
-    );
+  function chooseRestaurant(restaurant) {
+    setSelectedRestaurant(restaurant);
 
-    setScreen(
-      "restaurant-confirm"
-    );
+    setScreen("restaurant-confirm");
   }
 
   function addToCalendar() {
-    if (
-      !selectedRestaurant ||
-      !date ||
-      !time
-    ) {
+    if (!selectedRestaurant || !date || !time) {
       return;
     }
 
-    const [
-      year,
-      month,
-      day,
-    ] = date.split("-");
+    const [year, month, day] = date.split("-");
 
-    const [
-      hours,
-      minutes,
-    ] = time.split(":");
+    const [hours, minutes] = time.split(":");
 
     const startDate = new Date(
       Number(year),
@@ -429,9 +280,7 @@ function App() {
         2 * 60 * 60 * 1000
     );
 
-    function formatICSDate(
-      dateObject
-    ) {
+    function formatICSDate(dateObject) {
       const yyyy =
         dateObject.getFullYear();
 
@@ -460,22 +309,10 @@ function App() {
 
     function escapeICS(text) {
       return String(text || "")
-        .replace(
-          /\\/g,
-          "\\\\"
-        )
-        .replace(
-          /\n/g,
-          "\\n"
-        )
-        .replace(
-          /,/g,
-          "\\,"
-        )
-        .replace(
-          /;/g,
-          "\\;"
-        );
+        .replace(/\\/g, "\\\\")
+        .replace(/\n/g, "\\n")
+        .replace(/,/g, "\\,")
+        .replace(/;/g, "\\;");
     }
 
     const title =
@@ -575,13 +412,8 @@ function App() {
   return (
     <main className="app">
 
-      {/* =====================
-          ГЛАВНАЯ
-      ====================== */}
-
       {screen === "home" && (
         <section className="home">
-
           <div className="eyebrow">
             SONYA × SASHA
           </div>
@@ -617,13 +449,8 @@ function App() {
           <p className="hint">
             кухня · ресторан · задание
           </p>
-
         </section>
       )}
-
-      {/* =====================
-          КАРТА
-      ====================== */}
 
       {screen === "map" && (
         <WorldMap
@@ -633,14 +460,9 @@ function App() {
         />
       )}
 
-      {/* =====================
-          КУХНЯ
-      ====================== */}
-
       {screen === "result" &&
         cuisine && (
           <section className="result">
-
             <div className="eyebrow">
               СУДЬБА ВЫБРАЛА
             </div>
@@ -658,7 +480,6 @@ function App() {
             </div>
 
             <div className="info-block">
-
               <span>
                 О КУХНЕ
               </span>
@@ -666,11 +487,9 @@ function App() {
               <p>
                 {cuisine.description}
               </p>
-
             </div>
 
             <div className="fact">
-
               <span>
                 💡 ЗНАЕТЕ ЛИ ВЫ?
               </span>
@@ -678,17 +497,14 @@ function App() {
               <p>
                 {fact}
               </p>
-
             </div>
 
             <div className="dishes">
-
               <span>
                 ЧТО ПОПРОБОВАТЬ
               </span>
 
               <div className="dish-list">
-
                 {cuisine.dishes.map(
                   (dish) => (
                     <div
@@ -699,13 +515,10 @@ function App() {
                     </div>
                   )
                 )}
-
               </div>
-
             </div>
 
             <div className="task">
-
               <span>
                 ВАШЕ ЗАДАНИЕ
               </span>
@@ -713,14 +526,11 @@ function App() {
               <strong>
                 {task}
               </strong>
-
             </div>
 
             <button
               onClick={() =>
-                setScreen(
-                  "restaurant"
-                )
+                setScreen("restaurant")
               }
               className="secondary-button"
             >
@@ -733,18 +543,12 @@ function App() {
             >
               бросить судьбу ещё раз
             </button>
-
           </section>
         )}
-
-      {/* =====================
-          РЕСТОРАНЫ
-      ====================== */}
 
       {screen === "restaurant" &&
         cuisine && (
           <section className="result">
-
             <div className="eyebrow">
               СУДЬБА ДОВЕЛА ДО СТОЛА
             </div>
@@ -766,7 +570,6 @@ function App() {
             </p>
 
             <div className="restaurants">
-
               {cuisine.restaurants.map(
                 (
                   restaurant,
@@ -781,13 +584,11 @@ function App() {
                       )
                     }
                   >
-
                     <div className="restaurant-number">
                       0{index + 1}
                     </div>
 
                     <div className="restaurant-info">
-
                       <strong>
                         {
                           restaurant.name
@@ -799,17 +600,14 @@ function App() {
                           restaurant.address
                         }
                       </span>
-
                     </div>
 
                     <div className="restaurant-arrow">
                       →
                     </div>
-
                   </div>
                 )
               )}
-
             </div>
 
             <button
@@ -827,20 +625,14 @@ function App() {
             >
               начать заново
             </button>
-
           </section>
         )}
-
-      {/* =====================
-          ПОДТВЕРЖДЕНИЕ
-      ====================== */}
 
       {screen ===
         "restaurant-confirm" &&
         cuisine &&
         selectedRestaurant && (
           <section className="result">
-
             <div className="eyebrow">
               ВЫ ВЫБРАЛИ
             </div>
@@ -873,7 +665,6 @@ function App() {
             </a>
 
             <div className="task">
-
               <span>
                 КУХНЯ
               </span>
@@ -882,7 +673,6 @@ function App() {
                 {cuisine.emoji}{" "}
                 {cuisine.name}
               </strong>
-
             </div>
 
             <button
@@ -896,26 +686,18 @@ function App() {
 
             <button
               onClick={() =>
-                setScreen(
-                  "restaurant"
-                )
+                setScreen("restaurant")
               }
               className="text-button"
             >
               выбрать другой ресторан
             </button>
-
           </section>
         )}
-
-      {/* =====================
-          ВЫБОР ДАТЫ
-      ====================== */}
 
       {screen === "choice" &&
         cuisine && (
           <section className="result">
-
             <div className="eyebrow">
               СУДЬБА СМОТРИТ
             </div>
@@ -939,7 +721,6 @@ function App() {
             </p>
 
             <div className="task">
-
               <span>
                 РЕСТОРАН
               </span>
@@ -949,7 +730,6 @@ function App() {
                   selectedRestaurant?.name
                 }
               </strong>
-
             </div>
 
             <button
@@ -972,19 +752,13 @@ function App() {
             >
               изменить ресторан
             </button>
-
           </section>
         )}
-
-      {/* =====================
-          КАЛЕНДАРЬ
-      ====================== */}
 
       {screen === "calendar" &&
         cuisine &&
         selectedRestaurant && (
           <section className="result">
-
             <div className="eyebrow">
               СВИДАНИЕ НАЗНАЧЕНО
             </div>
@@ -1006,7 +780,6 @@ function App() {
             </p>
 
             <div className="calendar-field">
-
               <label htmlFor="date">
                 ДАТА
               </label>
@@ -1026,11 +799,9 @@ function App() {
                   )
                 }
               />
-
             </div>
 
             <div className="calendar-field">
-
               <label htmlFor="time">
                 ВРЕМЯ
               </label>
@@ -1045,11 +816,9 @@ function App() {
                   )
                 }
               />
-
             </div>
 
             <div className="task">
-
               <span>
                 В КАЛЕНДАРЬ ПОПАДЁТ
               </span>
@@ -1065,7 +834,6 @@ function App() {
                   selectedRestaurant.name
                 }
               </strong>
-
             </div>
 
             <button
@@ -1091,19 +859,13 @@ function App() {
             >
               назад
             </button>
-
           </section>
         )}
-
-      {/* =====================
-          ФИНАЛ
-      ====================== */}
 
       {screen === "final" &&
         cuisine &&
         selectedRestaurant && (
           <section className="result">
-
             <div className="eyebrow">
               СВИДАНИЕ НАЗНАЧЕНО
             </div>
@@ -1125,7 +887,6 @@ function App() {
             </p>
 
             <div className="task">
-
               <span>
                 ВАШ ВЕЧЕР
               </span>
@@ -1151,11 +912,9 @@ function App() {
 
                 🕐 {time}
               </strong>
-
             </div>
 
             <div className="task">
-
               <span>
                 ВАШЕ ЗАДАНИЕ
               </span>
@@ -1163,7 +922,6 @@ function App() {
               <strong>
                 {task}
               </strong>
-
             </div>
 
             <a
@@ -1221,7 +979,6 @@ function App() {
             >
               на главную
             </button>
-
           </section>
         )}
 
