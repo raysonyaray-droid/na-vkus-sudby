@@ -32,9 +32,9 @@ button {
   background: #f4efe7;
 }
 
-/* ============================================================
+/* =========================
    ОСНОВНЫЕ ЭКРАНЫ
-============================================================ */
+========================= */
 
 .home,
 .result {
@@ -58,11 +58,12 @@ button {
 .result {
   justify-content: flex-start;
   overflow-x: hidden;
+  overflow-y: auto;
 }
 
-/* ============================================================
-   ТИПОГРАФИКА
-============================================================ */
+/* =========================
+   ТЕКСТ
+========================= */
 
 .eyebrow {
   margin: 0 0 28px;
@@ -143,9 +144,9 @@ h2 {
   opacity: 0.45;
 }
 
-/* ============================================================
+/* =========================
    ЭМОДЗИ
-============================================================ */
+========================= */
 
 .emoji {
   margin: 12px 0 20px;
@@ -154,9 +155,9 @@ h2 {
   line-height: 1;
 }
 
-/* ============================================================
+/* =========================
    КНОПКИ
-============================================================ */
+========================= */
 
 .destiny-button,
 .secondary-button {
@@ -167,13 +168,13 @@ h2 {
 
   padding: 15px 20px;
 
-  border-radius: 999px;
-
   display: flex;
   align-items: center;
   justify-content: center;
 
-  flex-shrink: 0;
+  flex: 0 0 auto;
+
+  border-radius: 999px;
 
   text-align: center;
   text-decoration: none;
@@ -184,7 +185,7 @@ h2 {
 }
 
 .destiny-button {
-  margin-top: 0;
+  margin: 20px 0 0;
 
   border: none;
 
@@ -199,7 +200,7 @@ h2 {
 }
 
 .secondary-button {
-  margin-top: 12px;
+  margin: 14px 0 0;
 
   border: 1px solid rgba(29, 29, 27, 0.2);
 
@@ -225,7 +226,7 @@ h2 {
 
 .text-button {
   margin: 18px 0 0;
-  padding: 4px 8px;
+  padding: 5px 8px;
 
   border: none;
 
@@ -240,12 +241,12 @@ h2 {
   text-decoration: underline;
   text-underline-offset: 4px;
 
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
 
-/* ============================================================
+/* =========================
    ИНФОРМАЦИОННЫЕ БЛОКИ
-============================================================ */
+========================= */
 
 .info-block,
 .fact,
@@ -263,7 +264,7 @@ h2 {
 
   text-align: left;
 
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
 
 .info-block span,
@@ -295,9 +296,9 @@ h2 {
   background: rgba(255, 255, 255, 0.7);
 }
 
-/* ============================================================
+/* =========================
    БЛЮДА
-============================================================ */
+========================= */
 
 .dish-list {
   display: flex;
@@ -316,9 +317,9 @@ h2 {
   line-height: 1.2;
 }
 
-/* ============================================================
+/* =========================
    ЗАДАНИЕ
-============================================================ */
+========================= */
 
 .task strong {
   display: block;
@@ -329,9 +330,9 @@ h2 {
   font-weight: 600;
 }
 
-/* ============================================================
+/* =========================
    РЕСТОРАНЫ
-============================================================ */
+========================= */
 
 .restaurants {
   width: 100%;
@@ -342,9 +343,9 @@ h2 {
   display: flex;
   flex-direction: column;
 
-  gap: 9px;
+  gap: 10px;
 
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
 
 .restaurant-card {
@@ -368,7 +369,7 @@ h2 {
 
   transition: transform 0.15s ease;
 
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
 
 .restaurant-card:active {
@@ -424,9 +425,9 @@ h2 {
   opacity: 0.4;
 }
 
-/* ============================================================
-   КАЛЕНДАРЬ
-============================================================ */
+/* =========================
+   ПОЛЯ КАЛЕНДАРЯ
+========================= */
 
 .calendar-field {
   width: 100%;
@@ -436,7 +437,7 @@ h2 {
 
   text-align: left;
 
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
 
 .calendar-field label {
@@ -475,35 +476,46 @@ h2 {
   border-color: rgba(29, 29, 27, 0.35);
 }
 
-/* ============================================================
-   ФИНАЛЬНЫЙ ЭКРАН
-============================================================ */
+/* =========================
+   РАЗДЕЛЕНИЕ КНОПОК
+   ЭТО ГЛАВНЫЙ ФИКС
+========================= */
 
-.result .task + .secondary-button {
+/* Кнопка после задания */
+.task + .secondary-button {
+  margin-top: 20px;
+}
+
+/* Светлая после светлой */
+.secondary-button + .secondary-button {
+  margin-top: 12px;
+}
+
+/* Чёрная после светлой */
+.secondary-button + .destiny-button {
+  margin-top: 24px;
+}
+
+/* Светлая после чёрной */
+.destiny-button + .secondary-button {
   margin-top: 14px;
 }
 
-.result .secondary-button + .secondary-button {
-  margin-top: 9px;
-}
-
-.result .secondary-button + .destiny-button {
+/* Текстовая после любой кнопки */
+.secondary-button + .text-button,
+.destiny-button + .text-button {
   margin-top: 18px;
 }
 
-.result .destiny-button + .text-button {
-  margin-top: 15px;
-}
-
-/* ============================================================
-   МОБИЛЬНЫЕ
-============================================================ */
+/* =========================
+   МОБИЛЬНАЯ ВЕРСИЯ
+========================= */
 
 @media (max-width: 480px) {
 
   .home,
   .result {
-    padding: 34px 18px 50px;
+    padding: 34px 18px 55px;
   }
 
   h1 {
@@ -529,7 +541,7 @@ h2 {
 
   .destiny-button,
   .secondary-button {
-    min-height: 53px;
+    min-height: 54px;
     padding: 14px 17px;
   }
 
@@ -546,5 +558,9 @@ h2 {
 
   .task strong {
     font-size: 13px;
+  }
+
+  .secondary-button + .destiny-button {
+    margin-top: 22px;
   }
 }
