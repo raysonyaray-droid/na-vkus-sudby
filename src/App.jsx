@@ -516,15 +516,19 @@ function App() {
             кухня · ресторан · задание
           </p>
 
-          <p
-            style={{
-              marginTop: "20px",
-              fontSize: "11px",
-              opacity: 0.5,
-            }}
-          >
-            {supabaseStatus}
-          </p>
+        <p
+  style={{
+    marginTop: "20px",
+    padding: "10px 14px",
+    border: "1px solid #1d1d1b",
+    borderRadius: "12px",
+    fontSize: "12px",
+    opacity: 1,
+    background: "#fff",
+  }}
+>
+  {supabaseStatus}
+</p>
 
         </section>
       )}
