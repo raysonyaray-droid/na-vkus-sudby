@@ -6,11 +6,7 @@ function WorldMap({ onBack }) {
   const mapInstance = useRef(null);
 
   useEffect(() => {
-    if (
-      !window.L ||
-      !mapRef.current ||
-      mapInstance.current
-    ) {
+    if (!window.L || !mapRef.current || mapInstance.current) {
       return;
     }
 
@@ -25,6 +21,12 @@ function WorldMap({ onBack }) {
       attributionControl: true,
       worldCopyJump: true,
       preferCanvas: true,
+      scrollWheelZoom: true,
+      dragging: true,
+      touchZoom: true,
+      doubleClickZoom: true,
+      boxZoom: true,
+      keyboard: true,
     });
 
     mapInstance.current = map;
@@ -32,12 +34,12 @@ function WorldMap({ onBack }) {
     /*
       КАРТА
 
-      Используем Carto вместо OpenStreetMap.
-      Она остаётся полностью интерактивной:
-      можно двигать, приближать и отдалять.
+      Используем CARTO.
+      Карта остаётся обычной интерактивной картой мира:
+      движение, zoom, реальные страны и обычные тайлы.
     */
 
-    L.tileLayer(
+    const tileLayer = L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
       {
         subdomains: "abcd",
@@ -46,19 +48,27 @@ function WorldMap({ onBack }) {
           '&copy; OpenStreetMap contributors &copy; CARTO',
         crossOrigin: true,
         updateWhenIdle: true,
-        keepBuffer: 2,
+        keepBuffer: 4,
       }
-    ).addTo(map);
+    );
+
+    tileLayer.addTo(map);
 
     /*
       БУЛАВКИ
+
+      Каждая кухня связана со своей страной
+      через cuisineId в mapCountries.
     */
 
     mapCountries.forEach((country) => {
       const cuisineData = cuisines.find(
-        (item) =>
-          item.id === country.cuisineId
+        (item) => item.id === country.cuisineId
       );
+
+      if (!cuisineData) {
+        return;
+      }
 
       const pinIcon = L.divIcon({
         className: "destiny-pin-wrapper",
@@ -78,28 +88,29 @@ function WorldMap({ onBack }) {
         [country.lat, country.lng],
         {
           icon: pinIcon,
+          keyboard: true,
+          riseOnHover: true,
         }
       ).addTo(map);
 
       const restaurants =
-        cuisineData?.restaurants || [];
+        cuisineData.restaurants || [];
 
-      const restaurantList =
-        restaurants
-          .map(
-            (restaurant) => `
-              <div class="map-restaurant">
-                <strong>
-                  ${restaurant.name}
-                </strong>
+      const restaurantList = restaurants
+        .map(
+          (restaurant) => `
+            <div class="map-restaurant">
+              <strong>
+                ${restaurant.name}
+              </strong>
 
-                <span>
-                  ${restaurant.address}
-                </span>
-              </div>
-            `
-          )
-          .join("");
+              <span>
+                ${restaurant.address}
+              </span>
+            </div>
+          `
+        )
+        .join("");
 
       const popup = `
         <div class="map-popup">
@@ -130,8 +141,7 @@ function WorldMap({ onBack }) {
                 </div>
 
                 <p>
-                  Здесь пока нет
-                  ресторанов.
+                  Здесь пока нет ресторанов.
                 </p>
               `
           }
@@ -144,43 +154,117 @@ function WorldMap({ onBack }) {
         minWidth: 220,
         className: "destiny-popup",
         closeButton: true,
+        autoPan: true,
+        keepInView: true,
       });
     });
 
     /*
-      FIX ДЛЯ REACT
+      FIX ДЛЯ REACT / МОБИЛЬНОГО SAFARI
 
-      Когда карта находится на отдельном экране,
-      Leaflet иногда неправильно рассчитывает
-      размер контейнера.
+      Leaflet иногда создаётся до того,
+      как React окончательно рассчитает
+      размеры контейнера.
+
+      Поэтому несколько раз обновляем
+      размеры после появления экрана.
     */
 
     const fixMapSize = () => {
-      if (!mapInstance.current) return;
+      if (!mapInstance.current) {
+        return;
+      }
 
       mapInstance.current.invalidateSize({
         animate: false,
+        pan: false,
       });
     };
 
-    requestAnimationFrame(fixMapSize);
+    const timers = [];
 
-    setTimeout(fixMapSize, 100);
-    setTimeout(fixMapSize, 300);
-    setTimeout(fixMapSize, 700);
+    const scheduleFix = (delay) => {
+      const timer = window.setTimeout(
+        fixMapSize,
+        delay
+      );
+
+      timers.push(timer);
+    };
+
+    requestAnimationFrame(() => {
+      fixMapSize();
+
+      requestAnimationFrame(
+        fixMapSize
+      );
+    });
+
+    scheduleFix(100);
+    scheduleFix(250);
+    scheduleFix(500);
+    scheduleFix(900);
+    scheduleFix(1500);
+
+    map.whenReady(() => {
+      fixMapSize();
+    });
+
+    tileLayer.on("load", fixMapSize);
 
     window.addEventListener(
       "resize",
       fixMapSize
     );
 
+    window.addEventListener(
+      "orientationchange",
+      fixMapSize
+    );
+
+    let resizeObserver = null;
+
+    if (
+      typeof ResizeObserver !==
+        "undefined" &&
+      mapRef.current
+    ) {
+      resizeObserver =
+        new ResizeObserver(() => {
+          fixMapSize();
+        });
+
+      resizeObserver.observe(
+        mapRef.current
+      );
+    }
+
     return () => {
+      timers.forEach((timer) => {
+        window.clearTimeout(timer);
+      });
+
       window.removeEventListener(
         "resize",
         fixMapSize
       );
 
+      window.removeEventListener(
+        "orientationchange",
+        fixMapSize
+      );
+
+      tileLayer.off(
+        "load",
+        fixMapSize
+      );
+
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+
       map.remove();
+
       mapInstance.current = null;
     };
   }, []);
@@ -193,6 +277,7 @@ function WorldMap({ onBack }) {
         <button
           className="map-back"
           onClick={onBack}
+          aria-label="Назад"
         >
           ←
         </button>
