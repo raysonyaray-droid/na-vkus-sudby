@@ -1,0 +1,214 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Display",
+    "Helvetica Neue",
+    Arial,
+    sans-serif;
+
+  background: #f4efe7;
+  color: #171717;
+}
+
+button {
+  font: inherit;
+}
+
+.app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+
+.home,
+.result {
+  width: 100%;
+  max-width: 520px;
+  text-align: center;
+}
+
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  font-weight: 700;
+  opacity: 0.5;
+  margin-bottom: 28px;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(54px, 15vw, 92px);
+  line-height: 0.82;
+  letter-spacing: -0.07em;
+  font-weight: 900;
+}
+
+h1 span {
+  font-style: italic;
+  font-weight: 400;
+}
+
+.subtitle {
+  margin: 36px 0 44px;
+  font-size: 17px;
+  line-height: 1.5;
+  opacity: 0.65;
+}
+
+.destiny-button {
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  padding: 20px 24px;
+  background: #171717;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.destiny-button:active {
+  transform: scale(0.97);
+}
+
+.destiny-button:hover {
+  opacity: 0.88;
+}
+
+.hint {
+  margin-top: 18px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.35;
+}
+
+.result {
+  animation: appear 0.5s ease both;
+}
+
+.emoji {
+  font-size: 76px;
+  margin-bottom: 24px;
+}
+
+h2 {
+  margin: 0 0 18px;
+  font-size: clamp(42px, 12vw, 72px);
+  line-height: 0.9;
+  letter-spacing: -0.06em;
+  font-weight: 900;
+}
+
+.result > p {
+  margin: 0 auto 32px;
+  max-width: 380px;
+  font-size: 16px;
+  line-height: 1.5;
+  opacity: 0.65;
+}
+
+.task {
+  padding: 22px;
+  margin: 30px 0;
+  border: 1px solid rgba(23, 23, 23, 0.12);
+  border-radius: 24px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.task span {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  font-weight: 800;
+  opacity: 0.4;
+}
+
+.task strong {
+  display: block;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.secondary-button {
+  width: 100%;
+  border: 1px solid rgba(23, 23, 23, 0.18);
+  border-radius: 999px;
+  padding: 18px 24px;
+  background: transparent;
+  color: #171717;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.secondary-button:hover {
+  background: #171717;
+  color: #fff;
+}
+
+.text-button {
+  margin-top: 20px;
+  border: 0;
+  background: transparent;
+  color: #171717;
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  opacity: 0.45;
+  cursor: pointer;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .app {
+    padding: 20px;
+  }
+
+  .home,
+  .result {
+    max-width: 100%;
+  }
+
+  .subtitle {
+    margin-top: 30px;
+    margin-bottom: 36px;
+  }
+}
