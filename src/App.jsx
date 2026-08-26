@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { cuisines, tasks, mapCountries } from "./data";
+import { supabase } from "./supabase";
 
 function WorldMap({ onBack }) {
   const mapRef = useRef(null);
@@ -26,15 +27,15 @@ function WorldMap({ onBack }) {
     mapInstance.current = map;
 
     L.tileLayer(
-  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-  {
-    maxZoom: 19,
-    attribution:
-      '&copy; OpenStreetMap contributors',
-    updateWhenIdle: true,
-    keepBuffer: 4,
-  }
-).addTo(map);
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+        maxZoom: 19,
+        attribution:
+          '&copy; OpenStreetMap contributors',
+        updateWhenIdle: true,
+        keepBuffer: 4,
+      }
+    ).addTo(map);
 
     mapCountries.forEach((country) => {
       const cuisineData = cuisines.find(
@@ -210,12 +211,57 @@ function App() {
 
   const [fact, setFact] = useState(null);
 
-  const [selectedRestaurant, setSelectedRestaurant] =
-    useState(null);
+  const [
+    selectedRestaurant,
+    setSelectedRestaurant,
+  ] = useState(null);
 
   const [date, setDate] = useState("");
 
   const [time, setTime] = useState("19:00");
+
+  /*
+    ============================================
+    SUPABASE TEST
+    ============================================
+
+    Пока только проверяем подключение.
+
+    Если всё хорошо, в Console будет:
+    Supabase connected: []
+
+    Позже сюда добавим:
+    - сохранение отзывов
+    - рейтинг
+    - любимое блюдо
+    - историю свиданий
+    - данные для карты
+  */
+
+  useEffect(() => {
+    async function testSupabase() {
+      const { data, error } = await supabase
+        .from("date_history")
+        .select("*")
+        .limit(1);
+
+      if (error) {
+        console.error(
+          "Supabase error:",
+          error
+        );
+
+        return;
+      }
+
+      console.log(
+        "Supabase connected:",
+        data
+      );
+    }
+
+    testSupabase();
+  }, []);
 
   function startDestiny() {
     const randomCuisine =
@@ -235,7 +281,8 @@ function App() {
     const randomFact =
       randomCuisine.facts[
         Math.floor(
-          Math.random() * randomCuisine.facts.length
+          Math.random() *
+            randomCuisine.facts.length
         )
       ];
 
@@ -257,13 +304,24 @@ function App() {
   }
 
   function addToCalendar() {
-    if (!selectedRestaurant || !date || !time) {
+    if (
+      !selectedRestaurant ||
+      !date ||
+      !time
+    ) {
       return;
     }
 
-    const [year, month, day] = date.split("-");
+    const [
+      year,
+      month,
+      day,
+    ] = date.split("-");
 
-    const [hours, minutes] = time.split(":");
+    const [
+      hours,
+      minutes,
+    ] = time.split(":");
 
     const startDate = new Date(
       Number(year),
@@ -278,7 +336,9 @@ function App() {
         2 * 60 * 60 * 1000
     );
 
-    function formatICSDate(dateObject) {
+    function formatICSDate(
+      dateObject
+    ) {
       const yyyy =
         dateObject.getFullYear();
 
@@ -307,10 +367,22 @@ function App() {
 
     function escapeICS(text) {
       return String(text || "")
-        .replace(/\\/g, "\\\\")
-        .replace(/\n/g, "\\n")
-        .replace(/,/g, "\\,")
-        .replace(/;/g, "\\;");
+        .replace(
+          /\\/g,
+          "\\\\"
+        )
+        .replace(
+          /\n/g,
+          "\\n"
+        )
+        .replace(
+          /,/g,
+          "\\,"
+        )
+        .replace(
+          /;/g,
+          "\\;"
+        );
     }
 
     const title =
@@ -410,6 +482,10 @@ function App() {
   return (
     <main className="app">
 
+      {/* =====================
+          ГЛАВНАЯ
+      ====================== */}
+
       {screen === "home" && (
         <section className="home">
           <div className="eyebrow">
@@ -450,6 +526,10 @@ function App() {
         </section>
       )}
 
+      {/* =====================
+          КАРТА
+      ====================== */}
+
       {screen === "map" && (
         <WorldMap
           onBack={() =>
@@ -457,6 +537,10 @@ function App() {
           }
         />
       )}
+
+      {/* =====================
+          КУХНЯ
+      ====================== */}
 
       {screen === "result" &&
         cuisine && (
@@ -544,6 +628,10 @@ function App() {
           </section>
         )}
 
+      {/* =====================
+          РЕСТОРАНЫ
+      ====================== */}
+
       {screen === "restaurant" &&
         cuisine && (
           <section className="result">
@@ -626,6 +714,10 @@ function App() {
           </section>
         )}
 
+      {/* =====================
+          ПОДТВЕРЖДЕНИЕ
+      ====================== */}
+
       {screen ===
         "restaurant-confirm" &&
         cuisine &&
@@ -693,6 +785,10 @@ function App() {
           </section>
         )}
 
+      {/* =====================
+          ВЫБОР ДАТЫ
+      ====================== */}
+
       {screen === "choice" &&
         cuisine && (
           <section className="result">
@@ -752,6 +848,10 @@ function App() {
             </button>
           </section>
         )}
+
+      {/* =====================
+          КАЛЕНДАРЬ
+      ====================== */}
 
       {screen === "calendar" &&
         cuisine &&
@@ -859,6 +959,10 @@ function App() {
             </button>
           </section>
         )}
+
+      {/* =====================
+          ФИНАЛ
+      ====================== */}
 
       {screen === "final" &&
         cuisine &&
