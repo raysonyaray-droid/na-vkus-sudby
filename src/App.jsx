@@ -50,7 +50,7 @@ function App() {
   }
 
   // ============================================================
-  // 📅 СОЗДАНИЕ CALENDAR EVENT
+  // 📅 ДОБАВЛЕНИЕ В КАЛЕНДАРЬ
   // ============================================================
 
   function addToCalendar() {
@@ -69,8 +69,9 @@ function App() {
       Number(minutes)
     );
 
-    // Свидание длится 2 часа
-    const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
+    const endDate = new Date(
+      startDate.getTime() + 2 * 60 * 60 * 1000
+    );
 
     function formatICSDate(dateObject) {
       const yyyy = dateObject.getFullYear();
@@ -150,6 +151,9 @@ function App() {
     setTimeout(() => {
       URL.revokeObjectURL(url);
     }, 1000);
+
+    // ⭐ После добавления переходим на финальный экран
+    setScreen("final");
   }
 
   // ============================================================
@@ -167,12 +171,12 @@ function App() {
     setScreen("home");
   }
 
-  // ============================================================
-  // 🏠 HOME
-  // ============================================================
-
   return (
     <main className="app">
+
+      {/* ========================================================
+          🏠 ГЛАВНАЯ
+      ========================================================= */}
 
       {screen === "home" && (
         <section className="home">
@@ -230,8 +234,6 @@ function App() {
             {cuisine.mood}
           </div>
 
-          {/* О КУХНЕ */}
-
           <div className="info-block">
 
             <span>
@@ -244,8 +246,6 @@ function App() {
 
           </div>
 
-          {/* ФАКТ */}
-
           <div className="fact">
 
             <span>
@@ -257,8 +257,6 @@ function App() {
             </p>
 
           </div>
-
-          {/* БЛЮДА */}
 
           <div className="dishes">
 
@@ -280,8 +278,6 @@ function App() {
             </div>
 
           </div>
-
-          {/* ЗАДАНИЕ */}
 
           <div className="task">
 
@@ -337,8 +333,6 @@ function App() {
             Три места.
             <br />
             Один вечер.
-            <br />
-            Выбирайте.
           </p>
 
           <div className="restaurants">
@@ -395,7 +389,7 @@ function App() {
       )}
 
       {/* ========================================================
-          🍷 ВЫБРАН РЕСТОРАН
+          🍷 ПОДТВЕРЖДЕНИЕ РЕСТОРАНА
       ========================================================= */}
 
       {screen === "restaurant-confirm" &&
@@ -444,7 +438,7 @@ function App() {
               onClick={() => setScreen("choice")}
               className="destiny-button"
             >
-              ВЫБРАТЬ ДАТУ →
+              ПРОДОЛЖИТЬ →
             </button>
 
             <button
@@ -458,7 +452,7 @@ function App() {
         )}
 
       {/* ========================================================
-          🎲 ВЫБОРЫ СДЕЛАНЫ
+          🎲 ВЫБОР
       ========================================================= */}
 
       {screen === "choice" && cuisine && (
@@ -491,9 +485,7 @@ function App() {
             </span>
 
             <strong>
-              {selectedRestaurant
-                ? selectedRestaurant.name
-                : "Выберите ресторан"}
+              {selectedRestaurant?.name}
             </strong>
 
           </div>
@@ -542,10 +534,8 @@ function App() {
             <p>
               Выберите дату и время.
               <br />
-              Остальное мы уже решили.
+              Остальное уже решено.
             </p>
-
-            {/* ДАТА */}
 
             <div className="calendar-field">
 
@@ -558,7 +548,9 @@ function App() {
                 type="date"
                 value={date}
                 min={
-                  new Date().toISOString().split("T")[0]
+                  new Date()
+                    .toISOString()
+                    .split("T")[0]
                 }
                 onChange={(event) =>
                   setDate(event.target.value)
@@ -566,8 +558,6 @@ function App() {
               />
 
             </div>
-
-            {/* ВРЕМЯ */}
 
             <div className="calendar-field">
 
@@ -585,8 +575,6 @@ function App() {
               />
 
             </div>
-
-            {/* ПРЕДПРОСМОТР */}
 
             <div className="task">
 
@@ -612,10 +600,7 @@ function App() {
             </button>
 
             <p className="hint">
-              Файл откроется на iPhone.
-              <br />
-              Вы сможете добавить событие
-              в свой календарь.
+              Событие откроется на iPhone.
             </p>
 
             <button
@@ -623,6 +608,112 @@ function App() {
               className="text-button"
             >
               назад
+            </button>
+
+          </section>
+        )}
+
+      {/* ========================================================
+          ✨ ФИНАЛ
+      ========================================================= */}
+
+      {screen === "final" &&
+        cuisine &&
+        selectedRestaurant && (
+          <section className="result">
+
+            <div className="eyebrow">
+              СВИДАНИЕ НАЗНАЧЕНО
+            </div>
+
+            <div className="emoji">
+              ✨
+            </div>
+
+            <h2>
+              ВСЁ.
+              <br />
+              РЕШЕНО.
+            </h2>
+
+            <p>
+              Теперь остаётся только
+              дождаться этого дня.
+            </p>
+
+            <div className="task">
+
+              <span>
+                ВАШ ВЕЧЕР
+              </span>
+
+              <strong>
+                {cuisine.emoji} {cuisine.name}
+                <br />
+                <br />
+                🍽️ {selectedRestaurant.name}
+                <br />
+                <br />
+                📅 {date}
+                <br />
+                🕐 {time}
+              </strong>
+
+            </div>
+
+            <div className="task">
+
+              <span>
+                ВАШЕ ЗАДАНИЕ
+              </span>
+
+              <strong>
+                {task}
+              </strong>
+
+            </div>
+
+            <a
+              href={selectedRestaurant.maps}
+              target="_blank"
+              rel="noreferrer"
+              className="secondary-button"
+            >
+              🗺️ ПОСМОТРЕТЬ РЕСТОРАН
+            </a>
+
+            <button
+              onClick={() => setScreen("calendar")}
+              className="secondary-button"
+            >
+              📅 ОТКРЫТЬ КАЛЕНДАРЬ
+            </button>
+
+            <button
+              onClick={() => {
+                // Пока просто заглушка.
+                // Вечером подключим сюда Supabase.
+                alert(
+                  "После свидания здесь появится ваш отзыв ❤️"
+                );
+              }}
+              className="secondary-button"
+            >
+              ❤️ КАК СХОДИЛИ?
+            </button>
+
+            <button
+              onClick={restart}
+              className="destiny-button"
+            >
+              🎲 НОВОЕ СВИДАНИЕ
+            </button>
+
+            <button
+              onClick={() => setScreen("home")}
+              className="text-button"
+            >
+              на главную
             </button>
 
           </section>
