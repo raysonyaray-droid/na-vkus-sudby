@@ -48,13 +48,11 @@ function WorldMap({ onBack }) {
 
       const pinIcon = L.divIcon({
         className: "destiny-pin-wrapper",
-
         html: `
           <div class="destiny-pin">
             <span>${country.emoji}</span>
           </div>
         `,
-
         iconSize: [42, 42],
         iconAnchor: [21, 38],
         popupAnchor: [0, -34],
@@ -82,7 +80,6 @@ function WorldMap({ onBack }) {
 
       const popup = `
         <div class="map-popup">
-
           <div class="map-popup-country">
             ${country.emoji}
             ${country.country}
@@ -113,7 +110,6 @@ function WorldMap({ onBack }) {
                 </p>
               `
           }
-
         </div>
       `;
 
@@ -206,9 +202,7 @@ function App() {
   const [screen, setScreen] = useState("home");
 
   const [cuisine, setCuisine] = useState(null);
-
   const [task, setTask] = useState(null);
-
   const [fact, setFact] = useState(null);
 
   const [
@@ -217,47 +211,47 @@ function App() {
   ] = useState(null);
 
   const [date, setDate] = useState("");
-
   const [time, setTime] = useState("19:00");
 
-  /*
-    ============================================
-    SUPABASE TEST
-    ============================================
-
-    Пока только проверяем подключение.
-
-    Если всё хорошо, в Console будет:
-    Supabase connected: []
-
-    Позже сюда добавим:
-    - сохранение отзывов
-    - рейтинг
-    - любимое блюдо
-    - историю свиданий
-    - данные для карты
-  */
+  const [
+    supabaseStatus,
+    setSupabaseStatus,
+  ] = useState("Проверяем Supabase...");
 
   useEffect(() => {
     async function testSupabase() {
-      const { data, error } = await supabase
-        .from("date_history")
-        .select("*")
-        .limit(1);
+      try {
+        const { error } = await supabase
+          .from("date_history")
+          .select("id")
+          .limit(1);
 
-      if (error) {
+        if (error) {
+          console.error(
+            "Supabase error:",
+            error
+          );
+
+          setSupabaseStatus(
+            "❌ Ошибка подключения Supabase"
+          );
+
+          return;
+        }
+
+        setSupabaseStatus(
+          "✅ Supabase подключён"
+        );
+      } catch (error) {
         console.error(
-          "Supabase error:",
+          "Supabase connection error:",
           error
         );
 
-        return;
+        setSupabaseStatus(
+          "❌ Ошибка подключения Supabase"
+        );
       }
-
-      console.log(
-        "Supabase connected:",
-        data
-      );
     }
 
     testSupabase();
@@ -451,7 +445,6 @@ function App() {
       document.createElement("a");
 
     link.href = url;
-
     link.download =
       "na-vkus-sudby.ics";
 
@@ -472,7 +465,9 @@ function App() {
     setCuisine(null);
     setTask(null);
     setFact(null);
+
     setSelectedRestaurant(null);
+
     setDate("");
     setTime("19:00");
 
@@ -482,12 +477,9 @@ function App() {
   return (
     <main className="app">
 
-      {/* =====================
-          ГЛАВНАЯ
-      ====================== */}
-
       {screen === "home" && (
         <section className="home">
+
           <div className="eyebrow">
             SONYA × SASHA
           </div>
@@ -523,12 +515,19 @@ function App() {
           <p className="hint">
             кухня · ресторан · задание
           </p>
+
+          <p
+            style={{
+              marginTop: "20px",
+              fontSize: "11px",
+              opacity: 0.5,
+            }}
+          >
+            {supabaseStatus}
+          </p>
+
         </section>
       )}
-
-      {/* =====================
-          КАРТА
-      ====================== */}
 
       {screen === "map" && (
         <WorldMap
@@ -538,13 +537,10 @@ function App() {
         />
       )}
 
-      {/* =====================
-          КУХНЯ
-      ====================== */}
-
       {screen === "result" &&
         cuisine && (
           <section className="result">
+
             <div className="eyebrow">
               СУДЬБА ВЫБРАЛА
             </div>
@@ -625,16 +621,14 @@ function App() {
             >
               бросить судьбу ещё раз
             </button>
+
           </section>
         )}
-
-      {/* =====================
-          РЕСТОРАНЫ
-      ====================== */}
 
       {screen === "restaurant" &&
         cuisine && (
           <section className="result">
+
             <div className="eyebrow">
               СУДЬБА ДОВЕЛА ДО СТОЛА
             </div>
@@ -711,18 +705,16 @@ function App() {
             >
               начать заново
             </button>
+
           </section>
         )}
-
-      {/* =====================
-          ПОДТВЕРЖДЕНИЕ
-      ====================== */}
 
       {screen ===
         "restaurant-confirm" &&
         cuisine &&
         selectedRestaurant && (
           <section className="result">
+
             <div className="eyebrow">
               ВЫ ВЫБРАЛИ
             </div>
@@ -782,16 +774,14 @@ function App() {
             >
               выбрать другой ресторан
             </button>
+
           </section>
         )}
-
-      {/* =====================
-          ВЫБОР ДАТЫ
-      ====================== */}
 
       {screen === "choice" &&
         cuisine && (
           <section className="result">
+
             <div className="eyebrow">
               СУДЬБА СМОТРИТ
             </div>
@@ -846,17 +836,15 @@ function App() {
             >
               изменить ресторан
             </button>
+
           </section>
         )}
-
-      {/* =====================
-          КАЛЕНДАРЬ
-      ====================== */}
 
       {screen === "calendar" &&
         cuisine &&
         selectedRestaurant && (
           <section className="result">
+
             <div className="eyebrow">
               СВИДАНИЕ НАЗНАЧЕНО
             </div>
@@ -957,17 +945,15 @@ function App() {
             >
               назад
             </button>
+
           </section>
         )}
-
-      {/* =====================
-          ФИНАЛ
-      ====================== */}
 
       {screen === "final" &&
         cuisine &&
         selectedRestaurant && (
           <section className="result">
+
             <div className="eyebrow">
               СВИДАНИЕ НАЗНАЧЕНО
             </div>
@@ -1081,6 +1067,7 @@ function App() {
             >
               на главную
             </button>
+
           </section>
         )}
 
