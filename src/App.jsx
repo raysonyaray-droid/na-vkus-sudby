@@ -982,7 +982,16 @@ function App() {
 
               return;
             }
+if (
+  next.status ===
+  "scheduled"
+) {
+  setScreen(
+    "final"
+  );
 
+  return;
+}
             if (
               next.final_restaurant_id
             ) {
