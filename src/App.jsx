@@ -25,27 +25,101 @@ function WorldMap({ onBack }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
 
+  const [history, setHistory] =
+    useState([]);
+
+  const [
+    historyLoading,
+    setHistoryLoading,
+  ] = useState(true);
+
+  /* ============================================
+     ЗАГРУЗКА ИСТОРИИ
+  ============================================ */
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadHistory() {
+      setHistoryLoading(true);
+
+      const {
+        data,
+        error,
+      } = await supabase
+        .from("date_history")
+        .select(
+          "id, date, cuisine_id, cuisine_name, restaurant_name, rating, review"
+        )
+        .order("date", {
+          ascending: false,
+        });
+
+      if (!mounted) {
+        return;
+      }
+
+      if (error) {
+        console.error(
+          "Map history error:",
+          error
+        );
+
+        setHistory([]);
+        setHistoryLoading(false);
+
+        return;
+      }
+
+      console.log(
+        "MAP HISTORY:",
+        data
+      );
+
+      setHistory(data || []);
+      setHistoryLoading(false);
+    }
+
+    loadHistory();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  /* ============================================
+     СОЗДАНИЕ КАРТЫ
+  ============================================ */
+
   useEffect(() => {
     if (
+      historyLoading ||
       !window.L ||
-      !mapRef.current ||
-      mapInstance.current
+      !mapRef.current
     ) {
       return;
     }
 
     const L = window.L;
 
-    const map = L.map(mapRef.current, {
-      center: [25, 15],
-      zoom: 2,
-      minZoom: 2,
-      maxZoom: 6,
-      zoomControl: true,
-      attributionControl: true,
-      worldCopyJump: true,
-      preferCanvas: true,
-    });
+    if (mapInstance.current) {
+      mapInstance.current.remove();
+      mapInstance.current = null;
+    }
+
+    const map = L.map(
+      mapRef.current,
+      {
+        center: [25, 15],
+        zoom: 2,
+        minZoom: 2,
+        maxZoom: 6,
+        zoomControl: true,
+        attributionControl: true,
+        worldCopyJump: true,
+        preferCanvas: true,
+      }
+    );
 
     mapInstance.current = map;
 
@@ -60,101 +134,265 @@ function WorldMap({ onBack }) {
       }
     ).addTo(map);
 
-    mapCountries.forEach((country) => {
-      const cuisineData =
-        cuisines.find(
-          (item) =>
-            item.id ===
-            country.cuisineId
-        );
+    mapCountries.forEach(
+      (country) => {
+        const cuisineData =
+          cuisines.find(
+            (item) =>
+              item.id ===
+              country.cuisineId
+          );
 
-      if (!cuisineData) return;
-
-      const pinIcon =
-        L.divIcon({
-          className:
-            "destiny-pin-wrapper",
-
-          html: `
-            <div class="destiny-pin">
-              <span>${country.emoji}</span>
-            </div>
-          `,
-
-          iconSize: [42, 42],
-          iconAnchor: [21, 38],
-          popupAnchor: [0, -34],
-        });
-
-      const marker =
-        L.marker(
-          [
-            country.lat,
-            country.lng,
-          ],
-          {
-            icon: pinIcon,
-          }
-        ).addTo(map);
-
-      const restaurants =
-        cuisineData.restaurants ||
-        [];
-
-      const restaurantList =
-        restaurants
-          .map(
-            (restaurant) => `
-              <div class="map-restaurant">
-                <strong>
-                  ${restaurant.name}
-                </strong>
-
-                <span>
-                  ${restaurant.address}
-                </span>
-              </div>
-            `
-          )
-          .join("");
-
-      const popup = `
-        <div class="map-popup">
-
-          <div class="map-popup-country">
-            ${country.emoji}
-            ${country.country}
-          </div>
-
-          <div class="map-popup-cuisine">
-            ${country.cuisineName}
-          </div>
-
-          <div class="map-popup-line"></div>
-
-          <div class="map-popup-label">
-            РЕСТОРАНЫ
-          </div>
-
-          ${restaurantList}
-
-        </div>
-      `;
-
-      marker.bindPopup(
-        popup,
-        {
-          maxWidth: 280,
-          minWidth: 220,
-          className:
-            "destiny-popup",
-          closeButton: true,
+        if (!cuisineData) {
+          return;
         }
-      );
-    });
+
+        /* ============================================
+           ПРОШЛЫЕ СВИДАНИЯ ПО ЭТОЙ КУХНЕ
+        ============================================ */
+
+        const visits =
+          history.filter(
+            (item) =>
+              item.cuisine_id ===
+              country.cuisineId
+          );
+
+        const wasVisited =
+          visits.length > 0;
+
+        /* ============================================
+           ПИН
+        ============================================ */
+
+        const pinIcon =
+          L.divIcon({
+            className:
+              "destiny-pin-wrapper",
+
+            html: `
+              <div
+                style="
+                  position: relative;
+                  width: 42px;
+                  height: 42px;
+                  border-radius: 50% 50% 50% 0;
+                  transform: rotate(-45deg);
+                  background: #ffffff;
+                  border: 2px solid #8A1538;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  box-shadow: 0 4px 12px rgba(0,0,0,0.24);
+                  box-sizing: border-box;
+                "
+              >
+                <span
+                  style="
+                    transform: rotate(45deg);
+                    font-size: 21px;
+                    line-height: 1;
+                    display: block;
+                  "
+                >
+                  ${country.emoji}
+                </span>
+
+                ${
+                  wasVisited
+                    ? `
+                      <span
+                        style="
+                          position: absolute;
+                          right: -4px;
+                          top: -5px;
+                          transform: rotate(45deg);
+                          font-size: 13px;
+                          line-height: 1;
+                        "
+                      >
+                        ❤️
+                      </span>
+                    `
+                    : ""
+                }
+              </div>
+            `,
+
+            iconSize: [42, 42],
+            iconAnchor: [21, 38],
+            popupAnchor: [0, -34],
+          });
+
+        const marker =
+          L.marker(
+            [
+              country.lat,
+              country.lng,
+            ],
+            {
+              icon: pinIcon,
+            }
+          ).addTo(map);
+
+        /* ============================================
+           РЕСТОРАНЫ ИЗ DATA.JS
+        ============================================ */
+
+        const restaurants =
+          cuisineData.restaurants ||
+          [];
+
+        const restaurantList =
+          restaurants
+            .map(
+              (restaurant) => `
+                <div class="map-restaurant">
+                  <strong>
+                    ${restaurant.name}
+                  </strong>
+
+                  <span>
+                    ${restaurant.address}
+                  </span>
+                </div>
+              `
+            )
+            .join("");
+
+        /* ============================================
+           ИСТОРИЯ
+        ============================================ */
+
+        const historyList =
+          visits.length > 0
+            ? visits
+                .map(
+                  (visit) => {
+                    const rating =
+                      Number(
+                        visit.rating
+                      ) || 0;
+
+                    const stars =
+                      rating > 0
+                        ? "★".repeat(
+                            rating
+                          )
+                        : "";
+
+                    return `
+                      <div
+                        class="map-restaurant"
+                        style="
+                          margin-bottom: 12px;
+                        "
+                      >
+                        <strong>
+                          ❤️ ${
+                            visit.restaurant_name ||
+                            "Ресторан"
+                          }
+                        </strong>
+
+                        <span>
+                          ${
+                            visit.date ||
+                            ""
+                          }
+
+                          ${
+                            stars
+                              ? ` · ${stars}`
+                              : ""
+                          }
+                        </span>
+
+                        ${
+                          visit.review
+                            ? `
+                              <span
+                                style="
+                                  display: block;
+                                  margin-top: 4px;
+                                  opacity: .75;
+                                  line-height: 1.35;
+                                "
+                              >
+                                ${visit.review}
+                              </span>
+                            `
+                            : ""
+                        }
+                      </div>
+                    `;
+                  }
+                )
+                .join("")
+            : "";
+
+        /* ============================================
+           POPUP
+        ============================================ */
+
+        const popup = `
+          <div class="map-popup">
+
+            <div class="map-popup-country">
+              ${country.emoji}
+              ${country.country}
+            </div>
+
+            <div class="map-popup-cuisine">
+              ${country.cuisineName}
+            </div>
+
+            <div class="map-popup-line"></div>
+
+            ${
+              wasVisited
+                ? `
+                  <div class="map-popup-label">
+                    ❤️ МЫ УЖЕ БЫЛИ
+                  </div>
+
+                  ${historyList}
+
+                  <div class="map-popup-line"></div>
+                `
+                : ""
+            }
+
+            <div class="map-popup-label">
+              РЕСТОРАНЫ
+            </div>
+
+            ${restaurantList}
+
+          </div>
+        `;
+
+        marker.bindPopup(
+          popup,
+          {
+            maxWidth: 290,
+            minWidth: 230,
+            className:
+              "destiny-popup",
+            closeButton: true,
+          }
+        );
+      }
+    );
+
+    /* ============================================
+       FIX SIZE
+    ============================================ */
 
     const fixMapSize = () => {
-      if (!mapInstance.current) {
+      if (
+        !mapInstance.current
+      ) {
         return;
       }
 
@@ -199,12 +437,21 @@ function WorldMap({ onBack }) {
         fixMapSize
       );
 
-      map.remove();
-
-      mapInstance.current =
-        null;
+      if (
+        mapInstance.current
+      ) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
     };
-  }, []);
+  }, [
+    history,
+    historyLoading,
+  ]);
+
+  /* ============================================
+     UI
+  ============================================ */
 
   return (
     <section className="map-screen">
@@ -220,6 +467,7 @@ function WorldMap({ onBack }) {
         </button>
 
         <div>
+
           <div className="eyebrow map-eyebrow">
             SONYA × SASHA
           </div>
@@ -229,13 +477,16 @@ function WorldMap({ onBack }) {
             <br />
             КАРТА
           </h2>
+
         </div>
 
       </div>
 
       <div className="map-intro">
 
-        <span>🌍</span>
+        <span>
+          🌍
+        </span>
 
         <p>
           Каждая кухня —
@@ -245,6 +496,23 @@ function WorldMap({ onBack }) {
         </p>
 
       </div>
+
+      {historyLoading && (
+        <p
+          style={{
+            textAlign:
+              "center",
+            fontSize:
+              "10px",
+            letterSpacing:
+              "2px",
+            opacity:
+              0.45,
+          }}
+        >
+          ЗАГРУЖАЕМ ИСТОРИЮ...
+        </p>
+      )}
 
       <div
         ref={mapRef}
