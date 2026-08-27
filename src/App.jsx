@@ -1059,9 +1059,10 @@ function App() {
         error
       );
 
-      setSyncError(
-        "Не получилось сохранить свидание."
-      );
+  setSyncError(
+  error.message ||
+    "Не получилось сохранить свидание."
+);
 
       setHistorySaving(false);
 
