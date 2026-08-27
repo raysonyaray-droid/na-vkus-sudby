@@ -807,20 +807,20 @@ function App() {
             loginPassword,
         });
 
-    if (error) {
-      console.error(
-        "Login error:",
-        error
-      );
+   if (error) {
+  console.error(
+    "Login error:",
+    error
+  );
 
-      setLoginError(
-        "Не получилось войти. Проверьте email и пароль."
-      );
+  setLoginError(
+    error.message || "Ошибка входа"
+  );
 
-      setLoginBusy(false);
+  setLoginBusy(false);
 
-      return;
-    }
+  return;
+}
 
     /*
       Главное изменение:
