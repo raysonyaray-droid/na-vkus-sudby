@@ -1147,41 +1147,7 @@ function App() {
       return;
     }
 
-    const wildcardWins =
-      wildcards.length > 0 &&
-      Math.random() <
-        destinySettings
-          .wildcardChance;
 
-    let payload;
-
-    if (wildcardWins) {
-      const wildcard =
-        wildcards[
-          Math.floor(
-            Math.random() *
-              wildcards.length
-          )
-        ];
-
-      payload = {
-        status:
-          "cuisine_selected",
-
-        result_type:
-          "wildcard",
-
-        wildcard_id:
-          wildcard.id,
-
-        wildcard_name:
-          wildcard.name,
-
-        task:
-          wildcard.task ||
-          null,
-      };
-    } else {
       const availableCuisines =
         cuisines.filter(
           (item) =>
@@ -1504,7 +1470,19 @@ function App() {
     let winner;
     let chosen;
     let byFate;
+const wildcardWins =
+  wildcards.length > 0 &&
+  Math.random() < 0.05;
 
+const wildcard =
+  wildcardWins
+    ? wildcards[
+        Math.floor(
+          Math.random() *
+            wildcards.length
+        )
+      ]
+    : null;
     if (
       sonyaChoice.id ===
       sashaChoice.id
@@ -1549,7 +1527,11 @@ function App() {
 
         resolved_by_fate:
           byFate,
+wildcard_id:
+  wildcard?.id || null,
 
+wildcard_name:
+  wildcard?.name || null,
         status:
           "restaurant_selected",
 
