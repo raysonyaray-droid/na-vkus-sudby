@@ -2298,7 +2298,21 @@ loadWinnerStats();
             )}
 
             <div className="task">
+{finalRestaurant && (
+  <div className="fact">
+    <span>
+      🍽️ ВЫ ИДЁТЕ
+    </span>
 
+    <p>
+      <strong>
+        {finalRestaurant.name}
+      </strong>
+      <br />
+      {finalRestaurant.address}
+    </p>
+  </div>
+)}
               <span>
                 ВАШЕ ЗАДАНИЕ
               </span>
@@ -2327,12 +2341,14 @@ loadWinnerStats();
               </a>
             )}
 
-            <button
-              onClick={restart}
-              className="destiny-button"
-            >
-              ДИКАЯ КАРТА ПРИНЯТА
-            </button>
+           <button
+  onClick={() =>
+    setScreen("choice")
+  }
+  className="destiny-button"
+>
+  ПРИНЯТО →
+</button>
 
           </section>
         )}
