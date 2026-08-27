@@ -12,6 +12,20 @@ const {
 const wildcards =
   projectData.wildcards || [];
 
+/*
+  Кухни, которые вы уже недавно пробовали
+  ДО запуска приложения.
+
+  Пока корейская исключена вручную.
+  Позже перенесём это в Supabase
+  и сделаем управление через интерфейс.
+*/
+
+const visitedCuisineIds =
+  projectData.visitedCuisineIds || [
+    "korean",
+  ];
+
 /* ============================================
    КАРТА
 ============================================ */
@@ -55,99 +69,101 @@ function WorldMap({ onBack }) {
       }
     ).addTo(map);
 
-    mapCountries.forEach((country) => {
-      const cuisineData =
-        cuisines.find(
-          (item) =>
-            item.id ===
-            country.cuisineId
-        );
+    mapCountries.forEach(
+      (country) => {
+        const cuisineData =
+          cuisines.find(
+            (item) =>
+              item.id ===
+              country.cuisineId
+          );
 
-      if (!cuisineData) {
-        return;
-      }
-
-      const pinIcon =
-        L.divIcon({
-          className:
-            "destiny-pin-wrapper",
-
-          html: `
-            <div class="destiny-pin">
-              <span>${country.emoji}</span>
-            </div>
-          `,
-
-          iconSize: [42, 42],
-          iconAnchor: [21, 38],
-          popupAnchor: [0, -34],
-        });
-
-      const marker = L.marker(
-        [
-          country.lat,
-          country.lng,
-        ],
-        {
-          icon: pinIcon,
+        if (!cuisineData) {
+          return;
         }
-      ).addTo(map);
 
-      const restaurants =
-        cuisineData.restaurants ||
-        [];
+        const pinIcon =
+          L.divIcon({
+            className:
+              "destiny-pin-wrapper",
 
-      const restaurantList =
-        restaurants
-          .map(
-            (restaurant) => `
-              <div class="map-restaurant">
-                <strong>
-                  ${restaurant.name}
-                </strong>
-
-                <span>
-                  ${restaurant.address}
-                </span>
+            html: `
+              <div class="destiny-pin">
+                <span>${country.emoji}</span>
               </div>
-            `
-          )
-          .join("");
+            `,
 
-      const popup = `
-        <div class="map-popup">
+            iconSize: [42, 42],
+            iconAnchor: [21, 38],
+            popupAnchor: [0, -34],
+          });
 
-          <div class="map-popup-country">
-            ${country.emoji}
-            ${country.country}
+        const marker = L.marker(
+          [
+            country.lat,
+            country.lng,
+          ],
+          {
+            icon: pinIcon,
+          }
+        ).addTo(map);
+
+        const restaurants =
+          cuisineData.restaurants ||
+          [];
+
+        const restaurantList =
+          restaurants
+            .map(
+              (restaurant) => `
+                <div class="map-restaurant">
+                  <strong>
+                    ${restaurant.name}
+                  </strong>
+
+                  <span>
+                    ${restaurant.address}
+                  </span>
+                </div>
+              `
+            )
+            .join("");
+
+        const popup = `
+          <div class="map-popup">
+
+            <div class="map-popup-country">
+              ${country.emoji}
+              ${country.country}
+            </div>
+
+            <div class="map-popup-cuisine">
+              ${country.cuisineName}
+            </div>
+
+            <div class="map-popup-line"></div>
+
+            <div class="map-popup-label">
+              РЕСТОРАНЫ
+            </div>
+
+            ${restaurantList}
+
           </div>
+        `;
 
-          <div class="map-popup-cuisine">
-            ${country.cuisineName}
-          </div>
-
-          <div class="map-popup-line"></div>
-
-          <div class="map-popup-label">
-            РЕСТОРАНЫ
-          </div>
-
-          ${restaurantList}
-
-        </div>
-      `;
-
-      marker.bindPopup(
-        popup,
-        {
-          maxWidth: 280,
-          minWidth: 220,
-          className:
-            "destiny-popup",
-          closeButton: true,
-        }
-      );
-    });
+        marker.bindPopup(
+          popup,
+          {
+            maxWidth: 280,
+            minWidth: 220,
+            className:
+              "destiny-popup",
+            closeButton: true,
+          }
+        );
+      }
+    );
 
     const fixMapSize = () => {
       if (
@@ -268,9 +284,7 @@ function App() {
   const [screen, setScreen] =
     useState("home");
 
-  /* ============================================
-     AUTH
-  ============================================ */
+  /* AUTH */
 
   const [session, setSession] =
     useState(null);
@@ -303,14 +317,17 @@ function App() {
     setLoginError,
   ] = useState("");
 
-  /* ============================================
-     ОБЩАЯ СЕССИЯ
-  ============================================ */
+  /* ОБЩАЯ СЕССИЯ */
 
   const [
     activeSession,
     setActiveSession,
   ] = useState(null);
+
+  const [
+    backgroundLoading,
+    setBackgroundLoading,
+  ] = useState(false);
 
   const [
     syncLoading,
@@ -322,9 +339,7 @@ function App() {
     setSyncError,
   ] = useState("");
 
-  /* ============================================
-     СТАТИСТИКА СУДЬБЫ
-  ============================================ */
+  /* СТАТИСТИКА */
 
   const [
     sonyaWins,
@@ -336,9 +351,7 @@ function App() {
     setSashaWins,
   ] = useState(0);
 
-  /* ============================================
-     КАЛЕНДАРЬ
-  ============================================ */
+  /* КАЛЕНДАРЬ */
 
   const [date, setDate] =
     useState("");
@@ -436,17 +449,21 @@ function App() {
         ),
     ]);
 
-    setSonyaWins(
-      sonyaResult.count || 0
-    );
+    if (!sonyaResult.error) {
+      setSonyaWins(
+        sonyaResult.count || 0
+      );
+    }
 
-    setSashaWins(
-      sashaResult.count || 0
-    );
+    if (!sashaResult.error) {
+      setSashaWins(
+        sashaResult.count || 0
+      );
+    }
   }
 
   /* ============================================
-     АКТИВНАЯ СЕССИЯ
+     АКТИВНОЕ СВИДАНИЕ
   ============================================ */
 
   async function loadActiveSession() {
@@ -492,44 +509,44 @@ function App() {
   }
 
   /* ============================================
-     AUTH INIT
+     БЫСТРЫЙ AUTH INIT
   ============================================ */
 
   useEffect(() => {
-    let active = true;
+    let mounted = true;
 
     async function initializeAuth() {
-      const {
-        data: {
-          session:
-            currentSession,
-        },
-      } =
-        await supabase.auth
-          .getSession();
+      try {
+        const {
+          data: {
+            session:
+              currentSession,
+          },
+        } =
+          await supabase.auth
+            .getSession();
 
-      if (!active) {
-        return;
-      }
+        if (!mounted) {
+          return;
+        }
 
-      setSession(
-        currentSession
-      );
-
-      if (
-        currentSession?.user
-      ) {
-        await loadProfile(
-          currentSession.user
+        setSession(
+          currentSession
         );
-
-        await loadActiveSession();
-
-        await loadWinnerStats();
-      }
-
-      if (active) {
-        setAuthLoading(false);
+      } catch (error) {
+        console.error(
+          "Auth init error:",
+          error
+        );
+      } finally {
+        if (mounted) {
+          /*
+            ВАЖНО:
+            не ждём профиль,
+            сессии свиданий и статистику.
+          */
+          setAuthLoading(false);
+        }
       }
     }
 
@@ -542,25 +559,21 @@ function App() {
     } =
       supabase.auth
         .onAuthStateChange(
-          async (
+          (
             _event,
             newSession
           ) => {
+            /*
+              Только обновляем auth.
+              Никаких тяжёлых запросов
+              внутри callback.
+            */
+
             setSession(
               newSession
             );
 
-            if (
-              newSession?.user
-            ) {
-              await loadProfile(
-                newSession.user
-              );
-
-              await loadActiveSession();
-
-              await loadWinnerStats();
-            } else {
+            if (!newSession) {
               setProfile(null);
               setActiveSession(null);
             }
@@ -570,11 +583,54 @@ function App() {
         );
 
     return () => {
-      active = false;
+      mounted = false;
 
       subscription.unsubscribe();
     };
   }, []);
+
+  /* ============================================
+     ФОНОВАЯ ЗАГРУЗКА
+  ============================================ */
+
+  useEffect(() => {
+    if (
+      !session?.user
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadEverything() {
+      setBackgroundLoading(true);
+
+      /*
+        Загружаем параллельно,
+        а не по очереди.
+      */
+
+      await Promise.all([
+        loadProfile(
+          session.user
+        ),
+
+        loadActiveSession(),
+
+        loadWinnerStats(),
+      ]);
+
+      if (!cancelled) {
+        setBackgroundLoading(false);
+      }
+    }
+
+    loadEverything();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [session?.user?.id]);
 
   /* ============================================
      REALTIME
@@ -658,7 +714,36 @@ function App() {
                 "choice"
               );
 
-              await loadWinnerStats();
+              loadWinnerStats();
+
+              return;
+            }
+
+            /*
+              Если пользователь уже
+              выбрал ресторан —
+              оставляем его на экране
+              ресторанов и ждём второго.
+
+              Не перекидываем назад
+              на экран кухни.
+            */
+
+            const myChoice =
+              profile?.role ===
+              "sonya"
+                ? next
+                    .sonya_restaurant_id
+                : profile?.role ===
+                  "sasha"
+                ? next
+                    .sasha_restaurant_id
+                : null;
+
+            if (myChoice) {
+              setScreen(
+                "restaurant"
+              );
 
               return;
             }
@@ -679,7 +764,10 @@ function App() {
         channel
       );
     };
-  }, [session]);
+  }, [
+    session,
+    profile?.role,
+  ]);
 
   /* ============================================
      LOGIN
@@ -711,7 +799,10 @@ function App() {
       await supabase.auth
         .signInWithPassword({
           email:
-            loginEmail.trim(),
+            loginEmail
+              .trim()
+              .toLowerCase(),
+
           password:
             loginPassword,
         });
@@ -731,19 +822,15 @@ function App() {
       return;
     }
 
+    /*
+      Главное изменение:
+      получили session — сразу пускаем.
+      Базу здесь НЕ ждём.
+    */
+
     setSession(
       data.session
     );
-
-    if (data.user) {
-      await loadProfile(
-        data.user
-      );
-
-      await loadActiveSession();
-
-      await loadWinnerStats();
-    }
 
     setLoginPassword("");
 
@@ -830,16 +917,22 @@ function App() {
     "sonya"
       ? activeSession
           ?.sonya_restaurant_id
-      : activeSession
-          ?.sasha_restaurant_id;
+      : profile?.role ===
+        "sasha"
+      ? activeSession
+          ?.sasha_restaurant_id
+      : null;
 
   const otherRestaurantId =
     profile?.role ===
     "sonya"
       ? activeSession
           ?.sasha_restaurant_id
-      : activeSession
-          ?.sonya_restaurant_id;
+      : profile?.role ===
+        "sasha"
+      ? activeSession
+          ?.sonya_restaurant_id
+      : null;
 
   const myFateWins =
     profile?.role ===
@@ -857,7 +950,10 @@ function App() {
   ============================================ */
 
   async function startDestiny() {
-    if (syncLoading) {
+    if (
+      syncLoading ||
+      !profile
+    ) {
       return;
     }
 
@@ -930,11 +1026,38 @@ function App() {
           null,
       };
     } else {
+      /*
+        Исключаем кухни,
+        которые уже недавно
+        пробовали вне приложения.
+      */
+
+      const availableCuisines =
+        cuisines.filter(
+          (item) =>
+            !visitedCuisineIds
+              .includes(
+                item.id
+              )
+        );
+
+      /*
+        Если вдруг исключили
+        вообще всё — fallback
+        на полный список.
+      */
+
+      const cuisinePool =
+        availableCuisines
+          .length > 0
+          ? availableCuisines
+          : cuisines;
+
       const randomCuisine =
-        cuisines[
+        cuisinePool[
           Math.floor(
             Math.random() *
-              cuisines.length
+              cuisinePool.length
           )
         ];
 
@@ -1263,10 +1386,10 @@ function App() {
         data
       );
     } else {
-      await loadActiveSession();
+      loadActiveSession();
     }
 
-    await loadWinnerStats();
+    loadWinnerStats();
 
     setScreen("choice");
   }
@@ -1329,46 +1452,31 @@ function App() {
         String(
           dateObject
             .getMonth() + 1
-        ).padStart(
-          2,
-          "0"
-        );
+        ).padStart(2, "0");
 
       const dd =
         String(
           dateObject
             .getDate()
-        ).padStart(
-          2,
-          "0"
-        );
+        ).padStart(2, "0");
 
       const hh =
         String(
           dateObject
             .getHours()
-        ).padStart(
-          2,
-          "0"
-        );
+        ).padStart(2, "0");
 
       const min =
         String(
           dateObject
             .getMinutes()
-        ).padStart(
-          2,
-          "0"
-        );
+        ).padStart(2, "0");
 
       const ss =
         String(
           dateObject
             .getSeconds()
-        ).padStart(
-          2,
-          "0"
-        );
+        ).padStart(2, "0");
 
       return `${yyyy}${mm}${dd}T${hh}${min}${ss}`;
     }
@@ -1592,7 +1700,7 @@ function App() {
   }
 
   /* ============================================
-     LOADING
+     AUTH LOADING
   ============================================ */
 
   if (authLoading) {
@@ -1768,9 +1876,7 @@ function App() {
   return (
     <main className="app">
 
-      {/* ============================================
-          HOME
-      ============================================ */}
+      {/* HOME */}
 
       {screen === "home" && (
         <section className="home">
@@ -1798,16 +1904,23 @@ function App() {
               style={{
                 margin:
                   "-20px 0 18px",
+
                 fontSize:
                   "9px",
+
                 letterSpacing:
                   "2px",
+
                 textTransform:
                   "uppercase",
+
                 opacity: 0.45,
               }}
             >
-              {profile.display_name}
+              {
+                profile
+                  .display_name
+              }
 
               {isFavoriteOfFate
                 ? " · ✨ любимчик судьбы"
@@ -1815,13 +1928,38 @@ function App() {
             </p>
           )}
 
+          {!profile &&
+            backgroundLoading && (
+              <p
+                style={{
+                  margin:
+                    "-20px 0 18px",
+
+                  fontSize:
+                    "9px",
+
+                  letterSpacing:
+                    "2px",
+
+                  textTransform:
+                    "uppercase",
+
+                  opacity:
+                    0.35,
+                }}
+              >
+                синхронизируем...
+              </p>
+            )}
+
           <button
             onClick={
               startDestiny
             }
             className="destiny-button"
             disabled={
-              syncLoading
+              syncLoading ||
+              !profile
             }
           >
             {activeSession
@@ -1843,6 +1981,7 @@ function App() {
               style={{
                 marginTop:
                   "14px",
+
                 fontSize:
                   "12px",
               }}
@@ -1867,9 +2006,7 @@ function App() {
         </section>
       )}
 
-      {/* ============================================
-          MAP
-      ============================================ */}
+      {/* MAP */}
 
       {screen === "map" && (
         <WorldMap
@@ -1879,9 +2016,7 @@ function App() {
         />
       )}
 
-      {/* ============================================
-          WILDCARD
-      ============================================ */}
+      {/* WILDCARD */}
 
       {screen ===
         "wildcard" &&
@@ -2003,9 +2138,7 @@ function App() {
           </section>
         )}
 
-      {/* ============================================
-          CUISINE RESULT
-      ============================================ */}
+      {/* CUISINE */}
 
       {screen === "result" &&
         activeSession &&
@@ -2123,9 +2256,7 @@ function App() {
           </section>
         )}
 
-      {/* ============================================
-          RESTAURANTS
-      ============================================ */}
+      {/* RESTAURANTS */}
 
       {screen ===
         "restaurant" &&
@@ -2246,18 +2377,10 @@ function App() {
               </p>
             )}
 
-            {syncError && (
-              <p>
-                {syncError}
-              </p>
-            )}
-
           </section>
         )}
 
-      {/* ============================================
-          RESTAURANT RESULT
-      ============================================ */}
+      {/* CHOICE */}
 
       {screen ===
         "choice" &&
@@ -2422,9 +2545,7 @@ function App() {
           </section>
         )}
 
-      {/* ============================================
-          CALENDAR
-      ============================================ */}
+      {/* CALENDAR */}
 
       {screen ===
         "calendar" &&
@@ -2549,18 +2670,10 @@ function App() {
               В КАЛЕНДАРЬ
             </button>
 
-            {syncError && (
-              <p>
-                {syncError}
-              </p>
-            )}
-
           </section>
         )}
 
-      {/* ============================================
-          FINAL
-      ============================================ */}
+      {/* FINAL */}
 
       {screen ===
         "final" &&
