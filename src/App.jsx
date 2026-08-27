@@ -12,15 +12,6 @@ const {
 const wildcards =
   projectData.wildcards || [];
 
-/*
-  Кухни, которые вы уже недавно пробовали
-  ДО запуска приложения.
-
-  Пока корейская исключена вручную.
-  Позже перенесём это в Supabase
-  и сделаем управление через интерфейс.
-*/
-
 const visitedCuisineIds =
   projectData.visitedCuisineIds || [
     "korean",
@@ -69,36 +60,34 @@ function WorldMap({ onBack }) {
       }
     ).addTo(map);
 
-    mapCountries.forEach(
-      (country) => {
-        const cuisineData =
-          cuisines.find(
-            (item) =>
-              item.id ===
-              country.cuisineId
-          );
+    mapCountries.forEach((country) => {
+      const cuisineData =
+        cuisines.find(
+          (item) =>
+            item.id ===
+            country.cuisineId
+        );
 
-        if (!cuisineData) {
-          return;
-        }
+      if (!cuisineData) return;
 
-        const pinIcon =
-          L.divIcon({
-            className:
-              "destiny-pin-wrapper",
+      const pinIcon =
+        L.divIcon({
+          className:
+            "destiny-pin-wrapper",
 
-            html: `
-              <div class="destiny-pin">
-                <span>${country.emoji}</span>
-              </div>
-            `,
+          html: `
+            <div class="destiny-pin">
+              <span>${country.emoji}</span>
+            </div>
+          `,
 
-            iconSize: [42, 42],
-            iconAnchor: [21, 38],
-            popupAnchor: [0, -34],
-          });
+          iconSize: [42, 42],
+          iconAnchor: [21, 38],
+          popupAnchor: [0, -34],
+        });
 
-        const marker = L.marker(
+      const marker =
+        L.marker(
           [
             country.lat,
             country.lng,
@@ -108,67 +97,64 @@ function WorldMap({ onBack }) {
           }
         ).addTo(map);
 
-        const restaurants =
-          cuisineData.restaurants ||
-          [];
+      const restaurants =
+        cuisineData.restaurants ||
+        [];
 
-        const restaurantList =
-          restaurants
-            .map(
-              (restaurant) => `
-                <div class="map-restaurant">
-                  <strong>
-                    ${restaurant.name}
-                  </strong>
+      const restaurantList =
+        restaurants
+          .map(
+            (restaurant) => `
+              <div class="map-restaurant">
+                <strong>
+                  ${restaurant.name}
+                </strong>
 
-                  <span>
-                    ${restaurant.address}
-                  </span>
-                </div>
-              `
-            )
-            .join("");
+                <span>
+                  ${restaurant.address}
+                </span>
+              </div>
+            `
+          )
+          .join("");
 
-        const popup = `
-          <div class="map-popup">
+      const popup = `
+        <div class="map-popup">
 
-            <div class="map-popup-country">
-              ${country.emoji}
-              ${country.country}
-            </div>
-
-            <div class="map-popup-cuisine">
-              ${country.cuisineName}
-            </div>
-
-            <div class="map-popup-line"></div>
-
-            <div class="map-popup-label">
-              РЕСТОРАНЫ
-            </div>
-
-            ${restaurantList}
-
+          <div class="map-popup-country">
+            ${country.emoji}
+            ${country.country}
           </div>
-        `;
 
-        marker.bindPopup(
-          popup,
-          {
-            maxWidth: 280,
-            minWidth: 220,
-            className:
-              "destiny-popup",
-            closeButton: true,
-          }
-        );
-      }
-    );
+          <div class="map-popup-cuisine">
+            ${country.cuisineName}
+          </div>
+
+          <div class="map-popup-line"></div>
+
+          <div class="map-popup-label">
+            РЕСТОРАНЫ
+          </div>
+
+          ${restaurantList}
+
+        </div>
+      `;
+
+      marker.bindPopup(
+        popup,
+        {
+          maxWidth: 280,
+          minWidth: 220,
+          className:
+            "destiny-popup",
+          closeButton: true,
+        }
+      );
+    });
 
     const fixMapSize = () => {
-      if (
-        !mapInstance.current
-      ) {
+      if (!mapInstance.current) {
         return;
       }
 
@@ -361,13 +347,48 @@ function App() {
       destinySettings.defaultTime
     );
 
+  /* ИСТОРИЯ */
+
+  const [
+    historyMode,
+    setHistoryMode,
+  ] = useState(null);
+
+  const [
+    historyCuisine,
+    setHistoryCuisine,
+  ] = useState(null);
+
+  const [
+    historyRestaurant,
+    setHistoryRestaurant,
+  ] = useState("");
+
+  const [
+    historyDate,
+    setHistoryDate,
+  ] = useState("");
+
+  const [
+    historyRating,
+    setHistoryRating,
+  ] = useState(5);
+
+  const [
+    historyReview,
+    setHistoryReview,
+  ] = useState("");
+
+  const [
+    historySaving,
+    setHistorySaving,
+  ] = useState(false);
+
   /* ============================================
      PROFILE
   ============================================ */
 
-  async function loadProfile(
-    user
-  ) {
+  async function loadProfile(user) {
     if (!user) {
       setProfile(null);
       return null;
@@ -509,7 +530,7 @@ function App() {
   }
 
   /* ============================================
-     БЫСТРЫЙ AUTH INIT
+     AUTH INIT
   ============================================ */
 
   useEffect(() => {
@@ -540,11 +561,6 @@ function App() {
         );
       } finally {
         if (mounted) {
-          /*
-            ВАЖНО:
-            не ждём профиль,
-            сессии свиданий и статистику.
-          */
           setAuthLoading(false);
         }
       }
@@ -563,12 +579,6 @@ function App() {
             _event,
             newSession
           ) => {
-            /*
-              Только обновляем auth.
-              Никаких тяжёлых запросов
-              внутри callback.
-            */
-
             setSession(
               newSession
             );
@@ -594,9 +604,7 @@ function App() {
   ============================================ */
 
   useEffect(() => {
-    if (
-      !session?.user
-    ) {
+    if (!session?.user) {
       return;
     }
 
@@ -604,11 +612,6 @@ function App() {
 
     async function loadEverything() {
       setBackgroundLoading(true);
-
-      /*
-        Загружаем параллельно,
-        а не по очереди.
-      */
 
       await Promise.all([
         loadProfile(
@@ -719,16 +722,6 @@ function App() {
               return;
             }
 
-            /*
-              Если пользователь уже
-              выбрал ресторан —
-              оставляем его на экране
-              ресторанов и ждём второго.
-
-              Не перекидываем назад
-              на экран кухни.
-            */
-
             const myChoice =
               profile?.role ===
               "sonya"
@@ -807,26 +800,21 @@ function App() {
             loginPassword,
         });
 
-   if (error) {
-  console.error(
-    "Login error:",
-    error
-  );
+    if (error) {
+      console.error(
+        "Login error:",
+        error
+      );
 
-  setLoginError(
-    error.message || "Ошибка входа"
-  );
+      setLoginError(
+        error.message ||
+          "Ошибка входа"
+      );
 
-  setLoginBusy(false);
+      setLoginBusy(false);
 
-  return;
-}
-
-    /*
-      Главное изменение:
-      получили session — сразу пускаем.
-      Базу здесь НЕ ждём.
-    */
+      return;
+    }
 
     setSession(
       data.session
@@ -946,6 +934,174 @@ function App() {
       .favoriteOfFateWins;
 
   /* ============================================
+     ИСТОРИЯ
+  ============================================ */
+
+  function resetHistoryForm() {
+    setHistoryMode(null);
+    setHistoryCuisine(null);
+    setHistoryRestaurant("");
+    setHistoryDate("");
+    setHistoryRating(5);
+    setHistoryReview("");
+    setSyncError("");
+  }
+
+  function openAlreadyBeen() {
+    if (!currentCuisine) {
+      return;
+    }
+
+    setHistoryMode(
+      "already_been"
+    );
+
+    setHistoryCuisine(
+      currentCuisine
+    );
+
+    setHistoryRestaurant("");
+    setHistoryDate("");
+    setHistoryRating(5);
+    setHistoryReview("");
+    setSyncError("");
+
+    setScreen("history");
+  }
+
+  function openPastDate() {
+    setHistoryMode("past");
+
+    setHistoryCuisine(null);
+    setHistoryRestaurant("");
+    setHistoryDate("");
+    setHistoryRating(5);
+    setHistoryReview("");
+    setSyncError("");
+
+    setScreen("history");
+  }
+
+  async function saveHistory() {
+    if (
+      !historyCuisine ||
+      !historyRestaurant ||
+      !historyDate ||
+      historySaving
+    ) {
+      return;
+    }
+
+    setHistorySaving(true);
+    setSyncError("");
+
+    const restaurant =
+      historyCuisine
+        .restaurants
+        ?.find(
+          (item) =>
+            item.id ===
+            historyRestaurant
+        );
+
+    if (!restaurant) {
+      setSyncError(
+        "Выберите ресторан."
+      );
+
+      setHistorySaving(false);
+
+      return;
+    }
+
+    const {
+      error,
+    } = await supabase
+      .from("date_history")
+      .insert({
+        date:
+          historyDate,
+
+        cuisine_id:
+          historyCuisine.id,
+
+        cuisine_name:
+          historyCuisine.name,
+
+        restaurant_name:
+          restaurant.name,
+
+        rating:
+          historyRating,
+
+        review:
+          historyReview
+            .trim() ||
+          null,
+      });
+
+    if (error) {
+      console.error(
+        "History save error:",
+        error
+      );
+
+      setSyncError(
+        "Не получилось сохранить свидание."
+      );
+
+      setHistorySaving(false);
+
+      return;
+    }
+
+    /*
+      Если это «Мы тут уже были»,
+      текущий результат судьбы
+      больше не нужен.
+    */
+
+    if (
+      historyMode ===
+        "already_been" &&
+      activeSession
+    ) {
+      const {
+        error:
+          closeError,
+      } = await supabase
+        .from("date_sessions")
+        .update({
+          status:
+            "completed",
+
+          updated_at:
+            new Date()
+              .toISOString(),
+        })
+        .eq(
+          "id",
+          activeSession.id
+        );
+
+      if (closeError) {
+        console.error(
+          "Session close error:",
+          closeError
+        );
+      }
+
+      setActiveSession(null);
+    }
+
+    resetHistoryForm();
+
+    setHistorySaving(false);
+
+    setScreen("home");
+  }
+
+  /* ============================================
      ЗАПУСК СУДЬБЫ
   ============================================ */
 
@@ -1026,12 +1182,6 @@ function App() {
           null,
       };
     } else {
-      /*
-        Исключаем кухни,
-        которые уже недавно
-        пробовали вне приложения.
-      */
-
       const availableCuisines =
         cuisines.filter(
           (item) =>
@@ -1040,12 +1190,6 @@ function App() {
                 item.id
               )
         );
-
-      /*
-        Если вдруг исключили
-        вообще всё — fallback
-        на полный список.
-      */
 
       const cuisinePool =
         availableCuisines
@@ -1146,6 +1290,58 @@ function App() {
       );
     }
 
+    setSyncLoading(false);
+  }
+
+  /* ============================================
+     ОТКАТ
+  ============================================ */
+
+  async function rollbackDestiny() {
+    if (
+      !activeSession ||
+      syncLoading
+    ) {
+      return;
+    }
+
+    setSyncLoading(true);
+    setSyncError("");
+
+    const {
+      error,
+    } = await supabase
+      .from("date_sessions")
+      .update({
+        status:
+          "completed",
+
+        updated_at:
+          new Date()
+            .toISOString(),
+      })
+      .eq(
+        "id",
+        activeSession.id
+      );
+
+    if (error) {
+      console.error(
+        "Rollback error:",
+        error
+      );
+
+      setSyncError(
+        "Не получилось откатить судьбу."
+      );
+
+      setSyncLoading(false);
+
+      return;
+    }
+
+    setActiveSession(null);
+    setScreen("home");
     setSyncLoading(false);
   }
 
@@ -1481,9 +1677,7 @@ function App() {
       return `${yyyy}${mm}${dd}T${hh}${min}${ss}`;
     }
 
-    function escapeICS(
-      text
-    ) {
+    function escapeICS(text) {
       return String(
         text || ""
       )
@@ -1774,9 +1968,7 @@ function App() {
 
             <div className="calendar-field">
 
-              <label
-                htmlFor="login-email"
-              >
+              <label htmlFor="login-email">
                 EMAIL
               </label>
 
@@ -1788,13 +1980,9 @@ function App() {
                 }
                 autoComplete="email"
                 placeholder="ваш email"
-                onChange={(
-                  event
-                ) =>
+                onChange={(event) =>
                   setLoginEmail(
-                    event
-                      .target
-                      .value
+                    event.target.value
                   )
                 }
               />
@@ -1803,9 +1991,7 @@ function App() {
 
             <div className="calendar-field">
 
-              <label
-                htmlFor="login-password"
-              >
+              <label htmlFor="login-password">
                 ПАРОЛЬ
               </label>
 
@@ -1817,13 +2003,9 @@ function App() {
                 }
                 autoComplete="current-password"
                 placeholder="••••••••"
-                onChange={(
-                  event
-                ) =>
+                onChange={(event) =>
                   setLoginPassword(
-                    event
-                      .target
-                      .value
+                    event.target.value
                   )
                 }
               />
@@ -1976,6 +2158,22 @@ function App() {
             🌍 НАША КАРТА
           </button>
 
+          {profile?.role ===
+            "sonya" && (
+            <button
+              onClick={
+                openPastDate
+              }
+              className="text-button"
+              style={{
+                marginTop:
+                  "16px",
+              }}
+            >
+              ＋ ПРОШЛОЕ СВИДАНИЕ
+            </button>
+          )}
+
           {syncError && (
             <p
               style={{
@@ -2051,14 +2249,12 @@ function App() {
             {currentWildcard
               ?.subtitle && (
               <div className="fact">
-
                 <p>
                   {
                     currentWildcard
                       .subtitle
                   }
                 </p>
-
               </div>
             )}
 
@@ -2252,43 +2448,377 @@ function App() {
             >
               ВЫБРАТЬ РЕСТОРАН →
             </button>
-{profile?.role === "sonya" && (
-  <button
-    onClick={async () => {
-      if (!activeSession || syncLoading) return;
 
-      setSyncLoading(true);
-      setSyncError("");
+            {profile?.role ===
+              "sonya" && (
+              <>
+                <button
+                  onClick={
+                    openAlreadyBeen
+                  }
+                  className="text-button"
+                  style={{
+                    marginTop:
+                      "18px",
+                  }}
+                >
+                  ❤️ МЫ ТУТ УЖЕ БЫЛИ
+                </button>
 
-      const { error } = await supabase
-        .from("date_sessions")
-        .update({
-          status: "completed",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", activeSession.id);
+                <button
+                  onClick={
+                    rollbackDestiny
+                  }
+                  className="text-button"
+                  disabled={
+                    syncLoading
+                  }
+                  style={{
+                    marginTop:
+                      "10px",
 
-      if (error) {
-        console.error("Rollback error:", error);
-        setSyncError("Не получилось откатить судьбу.");
-        setSyncLoading(false);
-        return;
-      }
+                    opacity:
+                      0.55,
+                  }}
+                >
+                  ↺ ОТКАТИТЬ СУДЬБУ
+                </button>
+              </>
+            )}
 
-      setActiveSession(null);
-      setScreen("home");
-      setSyncLoading(false);
-    }}
-    className="text-button"
-    disabled={syncLoading}
-    style={{
-      marginTop: "18px",
-      opacity: 0.55,
-    }}
-  >
-    ↺ ОТКАТИТЬ СУДЬБУ
-  </button>
-)}
+            {syncError && (
+              <p
+                style={{
+                  fontSize:
+                    "12px",
+                  marginTop:
+                    "12px",
+                }}
+              >
+                {syncError}
+              </p>
+            )}
+
+          </section>
+        )}
+
+      {/* HISTORY */}
+
+      {screen ===
+        "history" && (
+          <section className="result">
+
+            <div className="eyebrow">
+              SONYA × SASHA
+            </div>
+
+            <div className="emoji">
+              ❤️
+            </div>
+
+            <h2>
+              {historyMode ===
+              "already_been"
+                ? "МЫ ТУТ УЖЕ БЫЛИ"
+                : "ПРОШЛОЕ СВИДАНИЕ"}
+            </h2>
+
+            <p>
+              Добавим его
+              <br />
+              в нашу историю.
+            </p>
+
+            {/* КУХНЯ */}
+
+            <div className="calendar-field">
+
+              <label>
+                КУХНЯ
+              </label>
+
+              <select
+                value={
+                  historyCuisine
+                    ?.id ||
+                  ""
+                }
+                disabled={
+                  historyMode ===
+                  "already_been"
+                }
+                onChange={(
+                  event
+                ) => {
+                  const selected =
+                    cuisines.find(
+                      (item) =>
+                        item.id ===
+                        event
+                          .target
+                          .value
+                    );
+
+                  setHistoryCuisine(
+                    selected ||
+                      null
+                  );
+
+                  setHistoryRestaurant(
+                    ""
+                  );
+                }}
+              >
+                <option value="">
+                  Выберите кухню
+                </option>
+
+                {cuisines.map(
+                  (item) => (
+                    <option
+                      key={
+                        item.id
+                      }
+                      value={
+                        item.id
+                      }
+                    >
+                      {item.emoji}{" "}
+                      {item.name}
+                    </option>
+                  )
+                )}
+              </select>
+
+            </div>
+
+            {/* РЕСТОРАН */}
+
+            {historyCuisine && (
+              <div className="calendar-field">
+
+                <label>
+                  РЕСТОРАН
+                </label>
+
+                <select
+                  value={
+                    historyRestaurant
+                  }
+                  onChange={(
+                    event
+                  ) =>
+                    setHistoryRestaurant(
+                      event
+                        .target
+                        .value
+                    )
+                  }
+                >
+                  <option value="">
+                    Выберите ресторан
+                  </option>
+
+                  {historyCuisine
+                    .restaurants
+                    ?.map(
+                      (
+                        restaurant
+                      ) => (
+                        <option
+                          key={
+                            restaurant.id
+                          }
+                          value={
+                            restaurant.id
+                          }
+                        >
+                          {
+                            restaurant.name
+                          }
+                        </option>
+                      )
+                    )}
+                </select>
+
+              </div>
+            )}
+
+            {/* ДАТА */}
+
+            <div className="calendar-field">
+
+              <label>
+                ДАТА
+              </label>
+
+              <input
+                type="date"
+                value={
+                  historyDate
+                }
+                max={
+                  new Date()
+                    .toISOString()
+                    .split(
+                      "T"
+                    )[0]
+                }
+                onChange={(
+                  event
+                ) =>
+                  setHistoryDate(
+                    event
+                      .target
+                      .value
+                  )
+                }
+              />
+
+            </div>
+
+            {/* ОЦЕНКА */}
+
+            <div className="calendar-field">
+
+              <label>
+                КАК ВАМ?
+              </label>
+
+              <div
+                style={{
+                  display:
+                    "flex",
+
+                  justifyContent:
+                    "center",
+
+                  gap: "8px",
+
+                  marginTop:
+                    "12px",
+                }}
+              >
+                {[
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                ].map(
+                  (star) => (
+                    <button
+                      key={
+                        star
+                      }
+                      type="button"
+                      onClick={() =>
+                        setHistoryRating(
+                          star
+                        )
+                      }
+                      style={{
+                        border:
+                          "none",
+
+                        background:
+                          "transparent",
+
+                        padding:
+                          0,
+
+                        fontSize:
+                          "30px",
+
+                        cursor:
+                          "pointer",
+
+                        opacity:
+                          star <=
+                          historyRating
+                            ? 1
+                            : 0.2,
+                      }}
+                    >
+                      ★
+                    </button>
+                  )
+                )}
+              </div>
+
+            </div>
+
+            {/* ОТЗЫВ */}
+
+            <div className="calendar-field">
+
+              <label>
+                ПАРА СЛОВ
+              </label>
+
+              <textarea
+                value={
+                  historyReview
+                }
+                placeholder="Что запомнилось?"
+                rows={4}
+                onChange={(
+                  event
+                ) =>
+                  setHistoryReview(
+                    event
+                      .target
+                      .value
+                  )
+                }
+              />
+
+            </div>
+
+            {syncError && (
+              <p
+                style={{
+                  fontSize:
+                    "12px",
+
+                  marginTop:
+                    "12px",
+                }}
+              >
+                {syncError}
+              </p>
+            )}
+
+            <button
+              onClick={
+                saveHistory
+              }
+              className="destiny-button"
+              disabled={
+                !historyCuisine ||
+                !historyRestaurant ||
+                !historyDate ||
+                historySaving
+              }
+            >
+              {historySaving
+                ? "СОХРАНЯЕМ..."
+                : "❤️ СОХРАНИТЬ В ИСТОРИЮ"}
+            </button>
+
+            <button
+              onClick={() => {
+                resetHistoryForm();
+
+                setScreen(
+                  "home"
+                );
+              }}
+              className="text-button"
+            >
+              отмена
+            </button>
+
           </section>
         )}
 
@@ -2614,9 +3144,7 @@ function App() {
 
             <div className="calendar-field">
 
-              <label
-                htmlFor="date"
-              >
+              <label htmlFor="date">
                 ДАТА
               </label>
 
@@ -2631,13 +3159,9 @@ function App() {
                       "T"
                     )[0]
                 }
-                onChange={(
-                  event
-                ) =>
+                onChange={(event) =>
                   setDate(
-                    event
-                      .target
-                      .value
+                    event.target.value
                   )
                 }
               />
@@ -2646,9 +3170,7 @@ function App() {
 
             <div className="calendar-field">
 
-              <label
-                htmlFor="time"
-              >
+              <label htmlFor="time">
                 ВРЕМЯ
               </label>
 
@@ -2656,13 +3178,9 @@ function App() {
                 id="time"
                 type="time"
                 value={time}
-                onChange={(
-                  event
-                ) =>
+                onChange={(event) =>
                   setTime(
-                    event
-                      .target
-                      .value
+                    event.target.value
                   )
                 }
               />
