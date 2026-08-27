@@ -2252,7 +2252,43 @@ function App() {
             >
               ВЫБРАТЬ РЕСТОРАН →
             </button>
+{profile?.role === "sonya" && (
+  <button
+    onClick={async () => {
+      if (!activeSession || syncLoading) return;
 
+      setSyncLoading(true);
+      setSyncError("");
+
+      const { error } = await supabase
+        .from("date_sessions")
+        .update({
+          status: "completed",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", activeSession.id);
+
+      if (error) {
+        console.error("Rollback error:", error);
+        setSyncError("Не получилось откатить судьбу.");
+        setSyncLoading(false);
+        return;
+      }
+
+      setActiveSession(null);
+      setScreen("home");
+      setSyncLoading(false);
+    }}
+    className="text-button"
+    disabled={syncLoading}
+    style={{
+      marginTop: "18px",
+      opacity: 0.55,
+    }}
+  >
+    ↺ ОТКАТИТЬ СУДЬБУ
+  </button>
+)}
           </section>
         )}
 
