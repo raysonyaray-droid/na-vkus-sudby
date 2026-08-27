@@ -1560,16 +1560,37 @@ wildcard_name:
     }
 
     if (data) {
-      setActiveSession(
-        data
-      );
-    } else {
-      loadActiveSession();
-    }
+  setActiveSession(
+    data
+  );
 
-    loadWinnerStats();
+  if (data.wildcard_id) {
+    setScreen(
+      "wildcard"
+    );
+  } else {
+    setScreen(
+      "choice"
+    );
+  }
+} else {
+  const freshSession =
+    await loadActiveSession();
 
-    setScreen("choice");
+  if (
+    freshSession?.wildcard_id
+  ) {
+    setScreen(
+      "wildcard"
+    );
+  } else {
+    setScreen(
+      "choice"
+    );
+  }
+}
+
+loadWinnerStats();
   }
 
   /* ============================================
