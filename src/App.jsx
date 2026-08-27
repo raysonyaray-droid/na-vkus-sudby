@@ -6,6 +6,7 @@ const {
   cuisines,
   tasks,
   mapCountries,
+  destinySettings,
 } = projectData;
 
 const wildcards =
@@ -54,98 +55,99 @@ function WorldMap({ onBack }) {
       }
     ).addTo(map);
 
-    mapCountries.forEach(
-      (country) => {
-        const cuisineData =
-          cuisines.find(
-            (item) =>
-              item.id ===
-              country.cuisineId
-          );
-
-        if (!cuisineData) return;
-
-        const pinIcon =
-          L.divIcon({
-            className:
-              "destiny-pin-wrapper",
-
-            html: `
-              <div class="destiny-pin">
-                <span>${country.emoji}</span>
-              </div>
-            `,
-
-            iconSize: [42, 42],
-            iconAnchor: [21, 38],
-            popupAnchor: [0, -34],
-          });
-
-        const marker = L.marker(
-          [
-            country.lat,
-            country.lng,
-          ],
-          {
-            icon: pinIcon,
-          }
-        ).addTo(map);
-
-        const restaurants =
-          cuisineData.restaurants ||
-          [];
-
-        const restaurantList =
-          restaurants
-            .map(
-              (restaurant) => `
-                <div class="map-restaurant">
-                  <strong>
-                    ${restaurant.name}
-                  </strong>
-                  <span>
-                    ${restaurant.address}
-                  </span>
-                </div>
-              `
-            )
-            .join("");
-
-        const popup = `
-          <div class="map-popup">
-
-            <div class="map-popup-country">
-              ${country.emoji}
-              ${country.country}
-            </div>
-
-            <div class="map-popup-cuisine">
-              ${country.cuisineName}
-            </div>
-
-            <div class="map-popup-line"></div>
-
-            <div class="map-popup-label">
-              РЕСТОРАНЫ
-            </div>
-
-            ${restaurantList}
-
-          </div>
-        `;
-
-        marker.bindPopup(
-          popup,
-          {
-            maxWidth: 280,
-            minWidth: 220,
-            className:
-              "destiny-popup",
-            closeButton: true,
-          }
+    mapCountries.forEach((country) => {
+      const cuisineData =
+        cuisines.find(
+          (item) =>
+            item.id ===
+            country.cuisineId
         );
+
+      if (!cuisineData) {
+        return;
       }
-    );
+
+      const pinIcon =
+        L.divIcon({
+          className:
+            "destiny-pin-wrapper",
+
+          html: `
+            <div class="destiny-pin">
+              <span>${country.emoji}</span>
+            </div>
+          `,
+
+          iconSize: [42, 42],
+          iconAnchor: [21, 38],
+          popupAnchor: [0, -34],
+        });
+
+      const marker = L.marker(
+        [
+          country.lat,
+          country.lng,
+        ],
+        {
+          icon: pinIcon,
+        }
+      ).addTo(map);
+
+      const restaurants =
+        cuisineData.restaurants ||
+        [];
+
+      const restaurantList =
+        restaurants
+          .map(
+            (restaurant) => `
+              <div class="map-restaurant">
+                <strong>
+                  ${restaurant.name}
+                </strong>
+
+                <span>
+                  ${restaurant.address}
+                </span>
+              </div>
+            `
+          )
+          .join("");
+
+      const popup = `
+        <div class="map-popup">
+
+          <div class="map-popup-country">
+            ${country.emoji}
+            ${country.country}
+          </div>
+
+          <div class="map-popup-cuisine">
+            ${country.cuisineName}
+          </div>
+
+          <div class="map-popup-line"></div>
+
+          <div class="map-popup-label">
+            РЕСТОРАНЫ
+          </div>
+
+          ${restaurantList}
+
+        </div>
+      `;
+
+      marker.bindPopup(
+        popup,
+        {
+          maxWidth: 280,
+          minWidth: 220,
+          className:
+            "destiny-popup",
+          closeButton: true,
+        }
+      );
+    });
 
     const fixMapSize = () => {
       if (
@@ -230,6 +232,7 @@ function WorldMap({ onBack }) {
       </div>
 
       <div className="map-intro">
+
         <span>🌍</span>
 
         <p>
@@ -238,6 +241,7 @@ function WorldMap({ onBack }) {
           ещё одна точка
           нашей истории.
         </p>
+
       </div>
 
       <div
@@ -264,7 +268,9 @@ function App() {
   const [screen, setScreen] =
     useState("home");
 
-  /* AUTH */
+  /* ============================================
+     AUTH
+  ============================================ */
 
   const [session, setSession] =
     useState(null);
@@ -297,7 +303,9 @@ function App() {
     setLoginError,
   ] = useState("");
 
-  /* ОБЩАЯ СЕССИЯ СВИДАНИЯ */
+  /* ============================================
+     ОБЩАЯ СЕССИЯ
+  ============================================ */
 
   const [
     activeSession,
@@ -314,6 +322,10 @@ function App() {
     setSyncError,
   ] = useState("");
 
+  /* ============================================
+     СТАТИСТИКА СУДЬБЫ
+  ============================================ */
+
   const [
     sonyaWins,
     setSonyaWins,
@@ -324,13 +336,17 @@ function App() {
     setSashaWins,
   ] = useState(0);
 
-  /* КАЛЕНДАРЬ */
+  /* ============================================
+     КАЛЕНДАРЬ
+  ============================================ */
 
   const [date, setDate] =
     useState("");
 
   const [time, setTime] =
-    useState("19:00");
+    useState(
+      destinySettings.defaultTime
+    );
 
   /* ============================================
      PROFILE
@@ -352,7 +368,10 @@ function App() {
       .select(
         "role, display_name"
       )
-      .eq("id", user.id)
+      .eq(
+        "id",
+        user.id
+      )
       .single();
 
     if (error) {
@@ -360,6 +379,8 @@ function App() {
         "Profile error:",
         error
       );
+
+      setProfile(null);
 
       return null;
     }
@@ -370,7 +391,7 @@ function App() {
   }
 
   /* ============================================
-     СТАТИСТИКА СУДЬБЫ
+     СТАТИСТИКА
   ============================================ */
 
   async function loadWinnerStats() {
@@ -425,7 +446,7 @@ function App() {
   }
 
   /* ============================================
-     ПОИСК АКТИВНОГО СВИДАНИЯ
+     АКТИВНАЯ СЕССИЯ
   ============================================ */
 
   async function loadActiveSession() {
@@ -477,7 +498,7 @@ function App() {
   useEffect(() => {
     let active = true;
 
-    async function init() {
+    async function initializeAuth() {
       const {
         data: {
           session:
@@ -487,7 +508,9 @@ function App() {
         await supabase.auth
           .getSession();
 
-      if (!active) return;
+      if (!active) {
+        return;
+      }
 
       setSession(
         currentSession
@@ -510,7 +533,7 @@ function App() {
       }
     }
 
-    init();
+    initializeAuth();
 
     const {
       data: {
@@ -558,7 +581,9 @@ function App() {
   ============================================ */
 
   useEffect(() => {
-    if (!session) return;
+    if (!session) {
+      return;
+    }
 
     const channel =
       supabase
@@ -601,13 +626,32 @@ function App() {
             }
 
             if (
+              next.status ===
+              "completed"
+            ) {
+              setActiveSession(
+                null
+              );
+
+              setScreen(
+                "home"
+              );
+
+              return;
+            }
+
+            if (
               next.result_type ===
               "wildcard"
             ) {
               setScreen(
                 "wildcard"
               );
-            } else if (
+
+              return;
+            }
+
+            if (
               next.final_restaurant_id
             ) {
               setScreen(
@@ -615,7 +659,13 @@ function App() {
               );
 
               await loadWinnerStats();
-            } else {
+
+              return;
+            }
+
+            if (
+              next.cuisine_id
+            ) {
               setScreen(
                 "result"
               );
@@ -625,10 +675,9 @@ function App() {
         .subscribe();
 
     return () => {
-      supabase
-        .removeChannel(
-          channel
-        );
+      supabase.removeChannel(
+        channel
+      );
     };
   }, [session]);
 
@@ -713,7 +762,7 @@ function App() {
   }
 
   /* ============================================
-     ТЕКУЩАЯ КУХНЯ / ДИКАЯ КАРТА
+     ТЕКУЩИЕ ДАННЫЕ
   ============================================ */
 
   const currentCuisine =
@@ -792,21 +841,28 @@ function App() {
       : activeSession
           ?.sonya_restaurant_id;
 
+  const myFateWins =
+    profile?.role ===
+    "sonya"
+      ? sonyaWins
+      : sashaWins;
+
+  const isFavoriteOfFate =
+    myFateWins >=
+    destinySettings
+      .favoriteOfFateWins;
+
   /* ============================================
      ЗАПУСК СУДЬБЫ
   ============================================ */
 
   async function startDestiny() {
-    if (syncLoading) return;
+    if (syncLoading) {
+      return;
+    }
 
     setSyncLoading(true);
     setSyncError("");
-
-    /*
-      Если уже есть незавершённая
-      общая сессия — не создаём
-      вторую.
-    */
 
     if (
       activeSession &&
@@ -841,7 +897,9 @@ function App() {
 
     const wildcardWins =
       wildcards.length > 0 &&
-      Math.random() < 0.25;
+      Math.random() <
+        destinySettings
+          .wildcardChance;
 
     let payload;
 
@@ -978,7 +1036,8 @@ function App() {
     if (
       !activeSession ||
       !profile ||
-      myRestaurantId
+      myRestaurantId ||
+      syncLoading
     ) {
       return;
     }
@@ -1034,12 +1093,6 @@ function App() {
       data
     );
 
-    /*
-      После сохранения заново
-      читаем строку — вдруг второй
-      человек уже сделал выбор.
-    */
-
     const {
       data: fresh,
       error:
@@ -1054,7 +1107,13 @@ function App() {
       .single();
 
     if (freshError) {
+      console.error(
+        "Fresh session error:",
+        freshError
+      );
+
       setSyncLoading(false);
+
       return;
     }
 
@@ -1075,14 +1134,21 @@ function App() {
   }
 
   /* ============================================
-     СУДЬБА ВЫБИРАЕТ МЕЖДУ ДВУМЯ
+     РЕШЕНИЕ СУДЬБЫ
   ============================================ */
 
   async function resolveRestaurants(
     dateSession
   ) {
+    const cuisineForSession =
+      cuisines.find(
+        (item) =>
+          item.id ===
+          dateSession.cuisine_id
+      );
+
     if (
-      !currentCuisine ||
+      !cuisineForSession ||
       dateSession
         .final_restaurant_id
     ) {
@@ -1090,7 +1156,7 @@ function App() {
     }
 
     const sonyaChoice =
-      currentCuisine
+      cuisineForSession
         .restaurants
         .find(
           (restaurant) =>
@@ -1100,7 +1166,7 @@ function App() {
         );
 
     const sashaChoice =
-      currentCuisine
+      cuisineForSession
         .restaurants
         .find(
           (restaurant) =>
@@ -1144,13 +1210,6 @@ function App() {
 
       byFate = true;
     }
-
-    /*
-      final_restaurant_id IS NULL
-      защищает от двойного решения,
-      если оба телефона нажали почти
-      одновременно.
-    */
 
     const {
       data,
@@ -1223,7 +1282,8 @@ function App() {
       !restaurant ||
       !date ||
       !time ||
-      !currentCuisine
+      !currentCuisine ||
+      !activeSession
     ) {
       return;
     }
@@ -1251,7 +1311,8 @@ function App() {
     const endDate =
       new Date(
         startDate.getTime() +
-          2 *
+          destinySettings
+            .dateDurationHours *
             60 *
             60 *
             1000
@@ -1478,6 +1539,10 @@ function App() {
         error
       );
 
+      setSyncError(
+        "Не получилось сохранить дату."
+      );
+
       return;
     }
 
@@ -1493,7 +1558,7 @@ function App() {
   }
 
   /* ============================================
-     ЗАВЕРШИТЬ / НОВОЕ СВИДАНИЕ
+     НОВОЕ СВИДАНИЕ
   ============================================ */
 
   async function restart() {
@@ -1517,7 +1582,11 @@ function App() {
     setActiveSession(null);
 
     setDate("");
-    setTime("19:00");
+
+    setTime(
+      destinySettings
+        .defaultTime
+    );
 
     setScreen("home");
   }
@@ -1529,6 +1598,7 @@ function App() {
   if (authLoading) {
     return (
       <main className="app">
+
         <section className="home">
 
           <div className="eyebrow">
@@ -1549,6 +1619,7 @@ function App() {
           </p>
 
         </section>
+
       </main>
     );
   }
@@ -1697,7 +1768,9 @@ function App() {
   return (
     <main className="app">
 
-      {/* HOME */}
+      {/* ============================================
+          HOME
+      ============================================ */}
 
       {screen === "home" && (
         <section className="home">
@@ -1736,12 +1809,7 @@ function App() {
             >
               {profile.display_name}
 
-              {(
-                profile.role ===
-                  "sonya"
-                  ? sonyaWins
-                  : sashaWins
-              ) > 3
+              {isFavoriteOfFate
                 ? " · ✨ любимчик судьбы"
                 : ""}
             </p>
@@ -1771,7 +1839,14 @@ function App() {
           </button>
 
           {syncError && (
-            <p>
+            <p
+              style={{
+                marginTop:
+                  "14px",
+                fontSize:
+                  "12px",
+              }}
+            >
               {syncError}
             </p>
           )}
@@ -1792,7 +1867,9 @@ function App() {
         </section>
       )}
 
-      {/* MAP */}
+      {/* ============================================
+          MAP
+      ============================================ */}
 
       {screen === "map" && (
         <WorldMap
@@ -1802,7 +1879,9 @@ function App() {
         />
       )}
 
-      {/* WILDCARD */}
+      {/* ============================================
+          WILDCARD
+      ============================================ */}
 
       {screen ===
         "wildcard" &&
@@ -1810,8 +1889,9 @@ function App() {
           <section className="result">
 
             <div className="eyebrow">
-              ⚠️ ВЫ ВЫТАЩИЛИ
-              ДИКУЮ КАРТУ
+              {currentWildcard
+                ?.eyebrow ||
+                "⚠️ ВЫ ВЫТАЩИЛИ ДИКУЮ КАРТУ"}
             </div>
 
             <div className="emoji">
@@ -1836,18 +1916,21 @@ function App() {
             {currentWildcard
               ?.subtitle && (
               <div className="fact">
+
                 <p>
                   {
                     currentWildcard
                       .subtitle
                   }
                 </p>
+
               </div>
             )}
 
             {currentWildcard
               ?.description && (
               <div className="info-block">
+
                 <span>
                   ЧТО ПРОИСХОДИТ
                 </span>
@@ -1858,12 +1941,14 @@ function App() {
                       .description
                   }
                 </p>
+
               </div>
             )}
 
             {currentWildcard
               ?.budget && (
               <div className="fact">
+
                 <span>
                   БЮДЖЕТ
                 </span>
@@ -1874,17 +1959,23 @@ function App() {
                       .budget
                   }
                 </p>
+
               </div>
             )}
 
             <div className="task">
+
               <span>
                 ВАШЕ ЗАДАНИЕ
               </span>
 
               <strong>
-                {activeSession.task}
+                {
+                  activeSession
+                    .task
+                }
               </strong>
+
             </div>
 
             {currentWildcard
@@ -1912,7 +2003,9 @@ function App() {
           </section>
         )}
 
-      {/* CUISINE RESULT */}
+      {/* ============================================
+          CUISINE RESULT
+      ============================================ */}
 
       {screen === "result" &&
         activeSession &&
@@ -1945,6 +2038,7 @@ function App() {
             </div>
 
             <div className="info-block">
+
               <span>
                 О КУХНЕ
               </span>
@@ -1955,9 +2049,11 @@ function App() {
                     .description
                 }
               </p>
+
             </div>
 
             <div className="fact">
+
               <span>
                 💡 ЗНАЕТЕ ЛИ ВЫ?
               </span>
@@ -1968,6 +2064,7 @@ function App() {
                     .fact
                 }
               </p>
+
             </div>
 
             <div className="dishes">
@@ -1998,6 +2095,7 @@ function App() {
             </div>
 
             <div className="task">
+
               <span>
                 ВАШЕ ЗАДАНИЕ
               </span>
@@ -2008,6 +2106,7 @@ function App() {
                     .task
                 }
               </strong>
+
             </div>
 
             <button
@@ -2024,7 +2123,9 @@ function App() {
           </section>
         )}
 
-      {/* RESTAURANTS */}
+      {/* ============================================
+          RESTAURANTS
+      ============================================ */}
 
       {screen ===
         "restaurant" &&
@@ -2085,8 +2186,7 @@ function App() {
 
                       <div className="restaurant-number">
                         0
-                        {index +
-                          1}
+                        {index + 1}
                       </div>
 
                       <div className="restaurant-info">
@@ -2146,10 +2246,18 @@ function App() {
               </p>
             )}
 
+            {syncError && (
+              <p>
+                {syncError}
+              </p>
+            )}
+
           </section>
         )}
 
-      {/* RESULT OF RESTAURANT CHOICE */}
+      {/* ============================================
+          RESTAURANT RESULT
+      ============================================ */}
 
       {screen ===
         "choice" &&
@@ -2257,8 +2365,11 @@ function App() {
               activeSession
                 .winner ===
                 "sonya" &&
-              sonyaWins > 3 && (
+              sonyaWins >=
+                destinySettings
+                  .favoriteOfFateWins && (
                 <div className="task">
+
                   <span>
                     ✨ ЛЮБИМЧИК
                     СУДЬБЫ
@@ -2269,6 +2380,7 @@ function App() {
                     {sonyaWins} побед
                     судьбы
                   </strong>
+
                 </div>
               )}
 
@@ -2277,8 +2389,11 @@ function App() {
               activeSession
                 .winner ===
                 "sasha" &&
-              sashaWins > 3 && (
+              sashaWins >=
+                destinySettings
+                  .favoriteOfFateWins && (
                 <div className="task">
+
                   <span>
                     ✨ ЛЮБИМЧИК
                     СУДЬБЫ
@@ -2289,6 +2404,7 @@ function App() {
                     {sashaWins} побед
                     судьбы
                   </strong>
+
                 </div>
               )}
 
@@ -2306,7 +2422,9 @@ function App() {
           </section>
         )}
 
-      {/* CALENDAR */}
+      {/* ============================================
+          CALENDAR
+      ============================================ */}
 
       {screen ===
         "calendar" &&
@@ -2431,10 +2549,18 @@ function App() {
               В КАЛЕНДАРЬ
             </button>
 
+            {syncError && (
+              <p>
+                {syncError}
+              </p>
+            )}
+
           </section>
         )}
 
-      {/* FINAL */}
+      {/* ============================================
+          FINAL
+      ============================================ */}
 
       {screen ===
         "final" &&
@@ -2457,6 +2583,12 @@ function App() {
               <br />
               РЕШЕНО.
             </h2>
+
+            <p>
+              Теперь остаётся
+              только дождаться
+              этого дня.
+            </p>
 
             <div className="task">
 
@@ -2503,6 +2635,21 @@ function App() {
 
             </div>
 
+            <div className="task">
+
+              <span>
+                ВАШЕ ЗАДАНИЕ
+              </span>
+
+              <strong>
+                {
+                  activeSession
+                    .task
+                }
+              </strong>
+
+            </div>
+
             <a
               href={
                 finalRestaurant
@@ -2544,6 +2691,17 @@ function App() {
               className="secondary-button"
             >
               🌍 НАША КАРТА
+            </button>
+
+            <button
+              onClick={() =>
+                setScreen(
+                  "home"
+                )
+              }
+              className="text-button"
+            >
+              на главную
             </button>
 
           </section>
