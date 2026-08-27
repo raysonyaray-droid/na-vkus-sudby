@@ -1,13 +1,30 @@
 import { useEffect, useRef, useState } from "react";
-import { cuisines, tasks, mapCountries } from "./data";
+import * as projectData from "./data";
 import { supabase } from "./supabase";
+
+const {
+  cuisines,
+  tasks,
+  mapCountries,
+} = projectData;
+
+const wildcards =
+  projectData.wildcards || [];
+
+/* ============================================
+   КАРТА
+============================================ */
 
 function WorldMap({ onBack }) {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
 
   useEffect(() => {
-    if (!window.L || !mapRef.current || mapInstance.current) {
+    if (
+      !window.L ||
+      !mapRef.current ||
+      mapInstance.current
+    ) {
       return;
     }
 
@@ -31,127 +48,165 @@ function WorldMap({ onBack }) {
       {
         maxZoom: 19,
         attribution:
-          '&copy; OpenStreetMap contributors',
+          "&copy; OpenStreetMap contributors",
         updateWhenIdle: true,
         keepBuffer: 4,
       }
     ).addTo(map);
 
-    mapCountries.forEach((country) => {
-      const cuisineData = cuisines.find(
-        (item) => item.id === country.cuisineId
-      );
+    mapCountries.forEach(
+      (country) => {
+        const cuisineData =
+          cuisines.find(
+            (item) =>
+              item.id ===
+              country.cuisineId
+          );
 
-      if (!cuisineData) {
-        return;
-      }
+        if (!cuisineData) return;
 
-      const pinIcon = L.divIcon({
-        className: "destiny-pin-wrapper",
-        html: `
-          <div class="destiny-pin">
-            <span>${country.emoji}</span>
-          </div>
-        `,
-        iconSize: [42, 42],
-        iconAnchor: [21, 38],
-        popupAnchor: [0, -34],
-      });
+        const pinIcon =
+          L.divIcon({
+            className:
+              "destiny-pin-wrapper",
 
-      const marker = L.marker(
-        [country.lat, country.lng],
-        {
-          icon: pinIcon,
-        }
-      ).addTo(map);
+            html: `
+              <div class="destiny-pin">
+                <span>${country.emoji}</span>
+              </div>
+            `,
 
-      const restaurants = cuisineData.restaurants || [];
+            iconSize: [42, 42],
+            iconAnchor: [21, 38],
+            popupAnchor: [0, -34],
+          });
 
-      const restaurantList = restaurants
-        .map(
-          (restaurant) => `
-            <div class="map-restaurant">
-              <strong>${restaurant.name}</strong>
-              <span>${restaurant.address}</span>
-            </div>
-          `
-        )
-        .join("");
-
-      const popup = `
-        <div class="map-popup">
-          <div class="map-popup-country">
-            ${country.emoji}
-            ${country.country}
-          </div>
-
-          <div class="map-popup-cuisine">
-            ${country.cuisineName}
-          </div>
-
-          <div class="map-popup-line"></div>
-
-          ${
-            restaurants.length
-              ? `
-                <div class="map-popup-label">
-                  РЕСТОРАНЫ
-                </div>
-
-                ${restaurantList}
-              `
-              : `
-                <div class="map-popup-label">
-                  НАША ИСТОРИЯ
-                </div>
-
-                <p>
-                  Здесь пока нет ресторанов.
-                </p>
-              `
+        const marker = L.marker(
+          [
+            country.lat,
+            country.lng,
+          ],
+          {
+            icon: pinIcon,
           }
-        </div>
-      `;
+        ).addTo(map);
 
-      marker.bindPopup(popup, {
-        maxWidth: 280,
-        minWidth: 220,
-        className: "destiny-popup",
-        closeButton: true,
-      });
-    });
+        const restaurants =
+          cuisineData.restaurants ||
+          [];
+
+        const restaurantList =
+          restaurants
+            .map(
+              (restaurant) => `
+                <div class="map-restaurant">
+                  <strong>
+                    ${restaurant.name}
+                  </strong>
+                  <span>
+                    ${restaurant.address}
+                  </span>
+                </div>
+              `
+            )
+            .join("");
+
+        const popup = `
+          <div class="map-popup">
+
+            <div class="map-popup-country">
+              ${country.emoji}
+              ${country.country}
+            </div>
+
+            <div class="map-popup-cuisine">
+              ${country.cuisineName}
+            </div>
+
+            <div class="map-popup-line"></div>
+
+            <div class="map-popup-label">
+              РЕСТОРАНЫ
+            </div>
+
+            ${restaurantList}
+
+          </div>
+        `;
+
+        marker.bindPopup(
+          popup,
+          {
+            maxWidth: 280,
+            minWidth: 220,
+            className:
+              "destiny-popup",
+            closeButton: true,
+          }
+        );
+      }
+    );
 
     const fixMapSize = () => {
-      if (!mapInstance.current) {
+      if (
+        !mapInstance.current
+      ) {
         return;
       }
 
-      mapInstance.current.invalidateSize(false);
+      mapInstance.current
+        .invalidateSize(false);
     };
 
-    requestAnimationFrame(fixMapSize);
+    requestAnimationFrame(
+      fixMapSize
+    );
 
-    const timer1 = setTimeout(fixMapSize, 100);
-    const timer2 = setTimeout(fixMapSize, 300);
-    const timer3 = setTimeout(fixMapSize, 700);
+    const timer1 =
+      setTimeout(
+        fixMapSize,
+        100
+      );
 
-    window.addEventListener("resize", fixMapSize);
+    const timer2 =
+      setTimeout(
+        fixMapSize,
+        300
+      );
+
+    const timer3 =
+      setTimeout(
+        fixMapSize,
+        700
+      );
+
+    window.addEventListener(
+      "resize",
+      fixMapSize
+    );
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
 
-      window.removeEventListener("resize", fixMapSize);
+      window.removeEventListener(
+        "resize",
+        fixMapSize
+      );
 
       map.remove();
-      mapInstance.current = null;
+
+      mapInstance.current =
+        null;
     };
   }, []);
 
   return (
     <section className="map-screen">
+
       <div className="map-header">
+
         <button
           className="map-back"
           onClick={onBack}
@@ -171,6 +226,7 @@ function WorldMap({ onBack }) {
             КАРТА
           </h2>
         </div>
+
       </div>
 
       <div className="map-intro">
@@ -179,7 +235,8 @@ function WorldMap({ onBack }) {
         <p>
           Каждая кухня —
           <br />
-          ещё одна точка нашей истории.
+          ещё одна точка
+          нашей истории.
         </p>
       </div>
 
@@ -194,114 +251,979 @@ function WorldMap({ onBack }) {
       >
         ← НАЗАД
       </button>
+
     </section>
   );
 }
 
-function App() {
-  const [screen, setScreen] = useState("home");
+/* ============================================
+   APP
+============================================ */
 
-  const [cuisine, setCuisine] = useState(null);
-  const [task, setTask] = useState(null);
-  const [fact, setFact] = useState(null);
+function App() {
+  const [screen, setScreen] =
+    useState("home");
+
+  /* AUTH */
+
+  const [session, setSession] =
+    useState(null);
+
+  const [profile, setProfile] =
+    useState(null);
 
   const [
-    selectedRestaurant,
-    setSelectedRestaurant,
+    authLoading,
+    setAuthLoading,
+  ] = useState(true);
+
+  const [
+    loginBusy,
+    setLoginBusy,
+  ] = useState(false);
+
+  const [
+    loginEmail,
+    setLoginEmail,
+  ] = useState("");
+
+  const [
+    loginPassword,
+    setLoginPassword,
+  ] = useState("");
+
+  const [
+    loginError,
+    setLoginError,
+  ] = useState("");
+
+  /* ОБЩАЯ СЕССИЯ СВИДАНИЯ */
+
+  const [
+    activeSession,
+    setActiveSession,
   ] = useState(null);
 
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("19:00");
+  const [
+    syncLoading,
+    setSyncLoading,
+  ] = useState(false);
 
   const [
-    supabaseStatus,
-    setSupabaseStatus,
-  ] = useState("Проверяем Supabase...");
+    syncError,
+    setSyncError,
+  ] = useState("");
+
+  const [
+    sonyaWins,
+    setSonyaWins,
+  ] = useState(0);
+
+  const [
+    sashaWins,
+    setSashaWins,
+  ] = useState(0);
+
+  /* КАЛЕНДАРЬ */
+
+  const [date, setDate] =
+    useState("");
+
+  const [time, setTime] =
+    useState("19:00");
+
+  /* ============================================
+     PROFILE
+  ============================================ */
+
+  async function loadProfile(
+    user
+  ) {
+    if (!user) {
+      setProfile(null);
+      return null;
+    }
+
+    const {
+      data,
+      error,
+    } = await supabase
+      .from("profiles")
+      .select(
+        "role, display_name"
+      )
+      .eq("id", user.id)
+      .single();
+
+    if (error) {
+      console.error(
+        "Profile error:",
+        error
+      );
+
+      return null;
+    }
+
+    setProfile(data);
+
+    return data;
+  }
+
+  /* ============================================
+     СТАТИСТИКА СУДЬБЫ
+  ============================================ */
+
+  async function loadWinnerStats() {
+    const [
+      sonyaResult,
+      sashaResult,
+    ] = await Promise.all([
+      supabase
+        .from("date_sessions")
+        .select(
+          "id",
+          {
+            count: "exact",
+            head: true,
+          }
+        )
+        .eq(
+          "resolved_by_fate",
+          true
+        )
+        .eq(
+          "winner",
+          "sonya"
+        ),
+
+      supabase
+        .from("date_sessions")
+        .select(
+          "id",
+          {
+            count: "exact",
+            head: true,
+          }
+        )
+        .eq(
+          "resolved_by_fate",
+          true
+        )
+        .eq(
+          "winner",
+          "sasha"
+        ),
+    ]);
+
+    setSonyaWins(
+      sonyaResult.count || 0
+    );
+
+    setSashaWins(
+      sashaResult.count || 0
+    );
+  }
+
+  /* ============================================
+     ПОИСК АКТИВНОГО СВИДАНИЯ
+  ============================================ */
+
+  async function loadActiveSession() {
+    const {
+      data,
+      error,
+    } = await supabase
+      .from("date_sessions")
+      .select("*")
+      .neq(
+        "status",
+        "completed"
+      )
+      .order(
+        "created_at",
+        {
+          ascending: false,
+        }
+      )
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error(
+        "Session load error:",
+        error
+      );
+
+      return null;
+    }
+
+    setActiveSession(data);
+
+    if (data?.date) {
+      setDate(data.date);
+    }
+
+    if (data?.time) {
+      setTime(data.time);
+    }
+
+    return data;
+  }
+
+  /* ============================================
+     AUTH INIT
+  ============================================ */
 
   useEffect(() => {
-    async function testSupabase() {
-      try {
-        const { error } = await supabase
-          .from("date_history")
-          .select("id")
-          .limit(1);
+    let active = true;
 
-        if (error) {
-          console.error(
-            "Supabase error:",
-            error
-          );
+    async function init() {
+      const {
+        data: {
+          session:
+            currentSession,
+        },
+      } =
+        await supabase.auth
+          .getSession();
 
-          setSupabaseStatus(
-            "❌ Ошибка подключения Supabase"
-          );
+      if (!active) return;
 
-          return;
-        }
+      setSession(
+        currentSession
+      );
 
-        setSupabaseStatus(
-          "✅ Supabase подключён"
-        );
-      } catch (error) {
-        console.error(
-          "Supabase connection error:",
-          error
+      if (
+        currentSession?.user
+      ) {
+        await loadProfile(
+          currentSession.user
         );
 
-        setSupabaseStatus(
-          "❌ Ошибка подключения Supabase"
-        );
+        await loadActiveSession();
+
+        await loadWinnerStats();
+      }
+
+      if (active) {
+        setAuthLoading(false);
       }
     }
 
-    testSupabase();
+    init();
+
+    const {
+      data: {
+        subscription,
+      },
+    } =
+      supabase.auth
+        .onAuthStateChange(
+          async (
+            _event,
+            newSession
+          ) => {
+            setSession(
+              newSession
+            );
+
+            if (
+              newSession?.user
+            ) {
+              await loadProfile(
+                newSession.user
+              );
+
+              await loadActiveSession();
+
+              await loadWinnerStats();
+            } else {
+              setProfile(null);
+              setActiveSession(null);
+            }
+
+            setAuthLoading(false);
+          }
+        );
+
+    return () => {
+      active = false;
+
+      subscription.unsubscribe();
+    };
   }, []);
 
-  function startDestiny() {
-    const randomCuisine =
-      cuisines[
-        Math.floor(
-          Math.random() * cuisines.length
+  /* ============================================
+     REALTIME
+  ============================================ */
+
+  useEffect(() => {
+    if (!session) return;
+
+    const channel =
+      supabase
+        .channel(
+          "shared-date-session"
         )
-      ];
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table:
+              "date_sessions",
+          },
+          async (payload) => {
+            const next =
+              payload.new;
 
-    const randomTask =
-      tasks[
-        Math.floor(
-          Math.random() * tasks.length
+            if (
+              !next ||
+              !next.id
+            ) {
+              return;
+            }
+
+            setActiveSession(
+              next
+            );
+
+            if (next.date) {
+              setDate(
+                next.date
+              );
+            }
+
+            if (next.time) {
+              setTime(
+                next.time
+              );
+            }
+
+            if (
+              next.result_type ===
+              "wildcard"
+            ) {
+              setScreen(
+                "wildcard"
+              );
+            } else if (
+              next.final_restaurant_id
+            ) {
+              setScreen(
+                "choice"
+              );
+
+              await loadWinnerStats();
+            } else {
+              setScreen(
+                "result"
+              );
+            }
+          }
         )
-      ];
+        .subscribe();
 
-    const randomFact =
-      randomCuisine.facts[
-        Math.floor(
-          Math.random() *
-            randomCuisine.facts.length
-        )
-      ];
+    return () => {
+      supabase
+        .removeChannel(
+          channel
+        );
+    };
+  }, [session]);
 
-    setCuisine(randomCuisine);
-    setTask(randomTask);
-    setFact(randomFact);
+  /* ============================================
+     LOGIN
+  ============================================ */
 
-    setSelectedRestaurant(null);
-    setDate("");
-    setTime("19:00");
+  async function handleLogin(
+    event
+  ) {
+    event.preventDefault();
 
-    setScreen("result");
-  }
-
-  function chooseRestaurant(restaurant) {
-    setSelectedRestaurant(restaurant);
-
-    setScreen("restaurant-confirm");
-  }
-
-  function addToCalendar() {
     if (
-      !selectedRestaurant ||
+      !loginEmail.trim() ||
+      !loginPassword
+    ) {
+      setLoginError(
+        "Введите email и пароль."
+      );
+
+      return;
+    }
+
+    setLoginBusy(true);
+    setLoginError("");
+
+    const {
+      data,
+      error,
+    } =
+      await supabase.auth
+        .signInWithPassword({
+          email:
+            loginEmail.trim(),
+          password:
+            loginPassword,
+        });
+
+    if (error) {
+      console.error(
+        "Login error:",
+        error
+      );
+
+      setLoginError(
+        "Не получилось войти. Проверьте email и пароль."
+      );
+
+      setLoginBusy(false);
+
+      return;
+    }
+
+    setSession(
+      data.session
+    );
+
+    if (data.user) {
+      await loadProfile(
+        data.user
+      );
+
+      await loadActiveSession();
+
+      await loadWinnerStats();
+    }
+
+    setLoginPassword("");
+
+    setLoginBusy(false);
+  }
+
+  async function handleLogout() {
+    await supabase.auth
+      .signOut();
+
+    setSession(null);
+    setProfile(null);
+    setActiveSession(null);
+
+    setScreen("home");
+  }
+
+  /* ============================================
+     ТЕКУЩАЯ КУХНЯ / ДИКАЯ КАРТА
+  ============================================ */
+
+  const currentCuisine =
+    activeSession?.cuisine_id
+      ? cuisines.find(
+          (item) =>
+            item.id ===
+            activeSession.cuisine_id
+        )
+      : null;
+
+  const currentWildcard =
+    activeSession?.wildcard_id
+      ? wildcards.find(
+          (item) =>
+            item.id ===
+            activeSession.wildcard_id
+        )
+      : null;
+
+  const finalRestaurant =
+    currentCuisine &&
+    activeSession
+      ?.final_restaurant_id
+      ? currentCuisine
+          .restaurants
+          .find(
+            (restaurant) =>
+              restaurant.id ===
+              activeSession
+                .final_restaurant_id
+          )
+      : null;
+
+  const sonyaRestaurant =
+    currentCuisine &&
+    activeSession
+      ?.sonya_restaurant_id
+      ? currentCuisine
+          .restaurants
+          .find(
+            (restaurant) =>
+              restaurant.id ===
+              activeSession
+                .sonya_restaurant_id
+          )
+      : null;
+
+  const sashaRestaurant =
+    currentCuisine &&
+    activeSession
+      ?.sasha_restaurant_id
+      ? currentCuisine
+          .restaurants
+          .find(
+            (restaurant) =>
+              restaurant.id ===
+              activeSession
+                .sasha_restaurant_id
+          )
+      : null;
+
+  const myRestaurantId =
+    profile?.role ===
+    "sonya"
+      ? activeSession
+          ?.sonya_restaurant_id
+      : activeSession
+          ?.sasha_restaurant_id;
+
+  const otherRestaurantId =
+    profile?.role ===
+    "sonya"
+      ? activeSession
+          ?.sasha_restaurant_id
+      : activeSession
+          ?.sonya_restaurant_id;
+
+  /* ============================================
+     ЗАПУСК СУДЬБЫ
+  ============================================ */
+
+  async function startDestiny() {
+    if (syncLoading) return;
+
+    setSyncLoading(true);
+    setSyncError("");
+
+    /*
+      Если уже есть незавершённая
+      общая сессия — не создаём
+      вторую.
+    */
+
+    if (
+      activeSession &&
+      activeSession.status !==
+        "completed"
+    ) {
+      if (
+        activeSession
+          .result_type ===
+        "wildcard"
+      ) {
+        setScreen(
+          "wildcard"
+        );
+      } else if (
+        activeSession
+          .final_restaurant_id
+      ) {
+        setScreen(
+          "choice"
+        );
+      } else {
+        setScreen(
+          "result"
+        );
+      }
+
+      setSyncLoading(false);
+
+      return;
+    }
+
+    const wildcardWins =
+      wildcards.length > 0 &&
+      Math.random() < 0.25;
+
+    let payload;
+
+    if (wildcardWins) {
+      const wildcard =
+        wildcards[
+          Math.floor(
+            Math.random() *
+              wildcards.length
+          )
+        ];
+
+      payload = {
+        status:
+          "cuisine_selected",
+
+        result_type:
+          "wildcard",
+
+        wildcard_id:
+          wildcard.id,
+
+        wildcard_name:
+          wildcard.name,
+
+        task:
+          wildcard.task ||
+          null,
+      };
+    } else {
+      const randomCuisine =
+        cuisines[
+          Math.floor(
+            Math.random() *
+              cuisines.length
+          )
+        ];
+
+      const randomTask =
+        tasks[
+          Math.floor(
+            Math.random() *
+              tasks.length
+          )
+        ];
+
+      const randomFact =
+        randomCuisine
+          .facts[
+            Math.floor(
+              Math.random() *
+                randomCuisine
+                  .facts.length
+            )
+          ];
+
+      payload = {
+        status:
+          "cuisine_selected",
+
+        result_type:
+          "cuisine",
+
+        cuisine_id:
+          randomCuisine.id,
+
+        cuisine_name:
+          randomCuisine.name,
+
+        country:
+          randomCuisine
+            .map?.country ||
+          null,
+
+        fact:
+          randomFact,
+
+        task:
+          randomTask,
+      };
+    }
+
+    const {
+      data,
+      error,
+    } = await supabase
+      .from("date_sessions")
+      .insert(payload)
+      .select()
+      .single();
+
+    if (error) {
+      console.error(
+        "Create destiny error:",
+        error
+      );
+
+      setSyncError(
+        "Судьба временно задумалась. Попробуйте ещё раз."
+      );
+
+      setSyncLoading(false);
+
+      return;
+    }
+
+    setActiveSession(
+      data
+    );
+
+    if (
+      data.result_type ===
+      "wildcard"
+    ) {
+      setScreen(
+        "wildcard"
+      );
+    } else {
+      setScreen(
+        "result"
+      );
+    }
+
+    setSyncLoading(false);
+  }
+
+  /* ============================================
+     ВЫБОР РЕСТОРАНА
+  ============================================ */
+
+  async function chooseRestaurant(
+    restaurant
+  ) {
+    if (
+      !activeSession ||
+      !profile ||
+      myRestaurantId
+    ) {
+      return;
+    }
+
+    setSyncLoading(true);
+    setSyncError("");
+
+    const field =
+      profile.role ===
+      "sonya"
+        ? "sonya_restaurant_id"
+        : "sasha_restaurant_id";
+
+    const {
+      data,
+      error,
+    } = await supabase
+      .from("date_sessions")
+      .update({
+        [field]:
+          restaurant.id,
+
+        status:
+          "choosing_restaurant",
+
+        updated_at:
+          new Date()
+            .toISOString(),
+      })
+      .eq(
+        "id",
+        activeSession.id
+      )
+      .select()
+      .single();
+
+    if (error) {
+      console.error(
+        "Restaurant choice error:",
+        error
+      );
+
+      setSyncError(
+        "Не получилось сохранить выбор."
+      );
+
+      setSyncLoading(false);
+
+      return;
+    }
+
+    setActiveSession(
+      data
+    );
+
+    /*
+      После сохранения заново
+      читаем строку — вдруг второй
+      человек уже сделал выбор.
+    */
+
+    const {
+      data: fresh,
+      error:
+        freshError,
+    } = await supabase
+      .from("date_sessions")
+      .select("*")
+      .eq(
+        "id",
+        activeSession.id
+      )
+      .single();
+
+    if (freshError) {
+      setSyncLoading(false);
+      return;
+    }
+
+    setActiveSession(
+      fresh
+    );
+
+    if (
+      fresh.sonya_restaurant_id &&
+      fresh.sasha_restaurant_id
+    ) {
+      await resolveRestaurants(
+        fresh
+      );
+    }
+
+    setSyncLoading(false);
+  }
+
+  /* ============================================
+     СУДЬБА ВЫБИРАЕТ МЕЖДУ ДВУМЯ
+  ============================================ */
+
+  async function resolveRestaurants(
+    dateSession
+  ) {
+    if (
+      !currentCuisine ||
+      dateSession
+        .final_restaurant_id
+    ) {
+      return;
+    }
+
+    const sonyaChoice =
+      currentCuisine
+        .restaurants
+        .find(
+          (restaurant) =>
+            restaurant.id ===
+            dateSession
+              .sonya_restaurant_id
+        );
+
+    const sashaChoice =
+      currentCuisine
+        .restaurants
+        .find(
+          (restaurant) =>
+            restaurant.id ===
+            dateSession
+              .sasha_restaurant_id
+        );
+
+    if (
+      !sonyaChoice ||
+      !sashaChoice
+    ) {
+      return;
+    }
+
+    let winner;
+    let chosen;
+    let byFate;
+
+    if (
+      sonyaChoice.id ===
+      sashaChoice.id
+    ) {
+      winner = "match";
+      chosen =
+        sonyaChoice;
+      byFate = false;
+    } else {
+      const chooseSonya =
+        Math.random() < 0.5;
+
+      winner =
+        chooseSonya
+          ? "sonya"
+          : "sasha";
+
+      chosen =
+        chooseSonya
+          ? sonyaChoice
+          : sashaChoice;
+
+      byFate = true;
+    }
+
+    /*
+      final_restaurant_id IS NULL
+      защищает от двойного решения,
+      если оба телефона нажали почти
+      одновременно.
+    */
+
+    const {
+      data,
+      error,
+    } = await supabase
+      .from("date_sessions")
+      .update({
+        final_restaurant_id:
+          chosen.id,
+
+        final_restaurant_name:
+          chosen.name,
+
+        final_restaurant_address:
+          chosen.address,
+
+        winner,
+
+        resolved_by_fate:
+          byFate,
+
+        status:
+          "restaurant_selected",
+
+        updated_at:
+          new Date()
+            .toISOString(),
+      })
+      .eq(
+        "id",
+        dateSession.id
+      )
+      .is(
+        "final_restaurant_id",
+        null
+      )
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      console.error(
+        "Resolve error:",
+        error
+      );
+
+      return;
+    }
+
+    if (data) {
+      setActiveSession(
+        data
+      );
+    } else {
+      await loadActiveSession();
+    }
+
+    await loadWinnerStats();
+
+    setScreen("choice");
+  }
+
+  /* ============================================
+     КАЛЕНДАРЬ
+  ============================================ */
+
+  function createCalendarFile(
+    restaurant
+  ) {
+    if (
+      !restaurant ||
       !date ||
-      !time
+      !time ||
+      !currentCuisine
     ) {
       return;
     }
@@ -317,50 +1239,85 @@ function App() {
       minutes,
     ] = time.split(":");
 
-    const startDate = new Date(
-      Number(year),
-      Number(month) - 1,
-      Number(day),
-      Number(hours),
-      Number(minutes)
-    );
+    const startDate =
+      new Date(
+        Number(year),
+        Number(month) - 1,
+        Number(day),
+        Number(hours),
+        Number(minutes)
+      );
 
-    const endDate = new Date(
-      startDate.getTime() +
-        2 * 60 * 60 * 1000
-    );
+    const endDate =
+      new Date(
+        startDate.getTime() +
+          2 *
+            60 *
+            60 *
+            1000
+      );
 
     function formatICSDate(
       dateObject
     ) {
       const yyyy =
-        dateObject.getFullYear();
+        dateObject
+          .getFullYear();
 
-      const mm = String(
-        dateObject.getMonth() + 1
-      ).padStart(2, "0");
+      const mm =
+        String(
+          dateObject
+            .getMonth() + 1
+        ).padStart(
+          2,
+          "0"
+        );
 
-      const dd = String(
-        dateObject.getDate()
-      ).padStart(2, "0");
+      const dd =
+        String(
+          dateObject
+            .getDate()
+        ).padStart(
+          2,
+          "0"
+        );
 
-      const hh = String(
-        dateObject.getHours()
-      ).padStart(2, "0");
+      const hh =
+        String(
+          dateObject
+            .getHours()
+        ).padStart(
+          2,
+          "0"
+        );
 
-      const min = String(
-        dateObject.getMinutes()
-      ).padStart(2, "0");
+      const min =
+        String(
+          dateObject
+            .getMinutes()
+        ).padStart(
+          2,
+          "0"
+        );
 
-      const ss = String(
-        dateObject.getSeconds()
-      ).padStart(2, "0");
+      const ss =
+        String(
+          dateObject
+            .getSeconds()
+        ).padStart(
+          2,
+          "0"
+        );
 
       return `${yyyy}${mm}${dd}T${hh}${min}${ss}`;
     }
 
-    function escapeICS(text) {
-      return String(text || "")
+    function escapeICS(
+      text
+    ) {
+      return String(
+        text || ""
+      )
         .replace(
           /\\/g,
           "\\\\"
@@ -380,18 +1337,18 @@ function App() {
     }
 
     const title =
-      `На вкус судьбы · ${cuisine.name}`;
+      `На вкус судьбы · ${currentCuisine.name}`;
 
     const description = [
-      `Ресторан: ${selectedRestaurant.name}`,
-      `Адрес: ${selectedRestaurant.address}`,
-      `Кухня: ${cuisine.name}`,
+      `Ресторан: ${restaurant.name}`,
+      `Адрес: ${restaurant.address}`,
+      `Кухня: ${currentCuisine.name}`,
       "",
       "Знаете ли вы?",
-      fact,
+      activeSession.fact,
       "",
       "Задание вечера:",
-      task,
+      activeSession.task,
       "",
       "На вкус судьбы · SONYA × SASHA",
     ].join("\n");
@@ -408,65 +1365,156 @@ function App() {
       "CALSCALE:GREGORIAN",
       "METHOD:PUBLISH",
       "BEGIN:VEVENT",
+
       `UID:${uid}`,
+
       `DTSTAMP:${formatICSDate(
         new Date()
       )}`,
+
       `DTSTART:${formatICSDate(
         startDate
       )}`,
+
       `DTEND:${formatICSDate(
         endDate
       )}`,
-      `SUMMARY:${escapeICS(title)}`,
+
+      `SUMMARY:${escapeICS(
+        title
+      )}`,
+
       `DESCRIPTION:${escapeICS(
         description
       )}`,
+
       `LOCATION:${escapeICS(
-        selectedRestaurant.address
+        restaurant.address
       )}`,
+
       "STATUS:CONFIRMED",
       "END:VEVENT",
       "END:VCALENDAR",
     ].join("\r\n");
 
-    const blob = new Blob(
-      [icsContent],
-      {
-        type:
-          "text/calendar;charset=utf-8",
-      }
-    );
+    const blob =
+      new Blob(
+        [icsContent],
+        {
+          type:
+            "text/calendar;charset=utf-8",
+        }
+      );
 
     const url =
-      URL.createObjectURL(blob);
+      URL.createObjectURL(
+        blob
+      );
 
     const link =
-      document.createElement("a");
+      document
+        .createElement("a");
 
     link.href = url;
+
     link.download =
       "na-vkus-sudby.ics";
 
-    document.body.appendChild(link);
+    document.body
+      .appendChild(
+        link
+      );
 
     link.click();
 
-    document.body.removeChild(link);
+    document.body
+      .removeChild(
+        link
+      );
 
     setTimeout(() => {
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(
+        url
+      );
     }, 1000);
+  }
+
+  async function addToCalendar() {
+    if (
+      !finalRestaurant ||
+      !date ||
+      !time ||
+      !activeSession
+    ) {
+      return;
+    }
+
+    const {
+      data,
+      error,
+    } = await supabase
+      .from("date_sessions")
+      .update({
+        date,
+        time,
+
+        status:
+          "scheduled",
+
+        updated_at:
+          new Date()
+            .toISOString(),
+      })
+      .eq(
+        "id",
+        activeSession.id
+      )
+      .select()
+      .single();
+
+    if (error) {
+      console.error(
+        "Calendar sync error:",
+        error
+      );
+
+      return;
+    }
+
+    setActiveSession(
+      data
+    );
+
+    createCalendarFile(
+      finalRestaurant
+    );
 
     setScreen("final");
   }
 
-  function restart() {
-    setCuisine(null);
-    setTask(null);
-    setFact(null);
+  /* ============================================
+     ЗАВЕРШИТЬ / НОВОЕ СВИДАНИЕ
+  ============================================ */
 
-    setSelectedRestaurant(null);
+  async function restart() {
+    if (activeSession) {
+      await supabase
+        .from("date_sessions")
+        .update({
+          status:
+            "completed",
+
+          updated_at:
+            new Date()
+              .toISOString(),
+        })
+        .eq(
+          "id",
+          activeSession.id
+        );
+    }
+
+    setActiveSession(null);
 
     setDate("");
     setTime("19:00");
@@ -474,8 +1522,182 @@ function App() {
     setScreen("home");
   }
 
+  /* ============================================
+     LOADING
+  ============================================ */
+
+  if (authLoading) {
+    return (
+      <main className="app">
+        <section className="home">
+
+          <div className="eyebrow">
+            SONYA × SASHA
+          </div>
+
+          <h1>
+            НА ВКУС
+            <br />
+            <span>
+              СУДЬБЫ
+            </span>
+          </h1>
+
+          <p className="subtitle">
+            Судьба
+            загружается...
+          </p>
+
+        </section>
+      </main>
+    );
+  }
+
+  /* ============================================
+     LOGIN
+  ============================================ */
+
+  if (!session) {
+    return (
+      <main className="app">
+
+        <section className="home">
+
+          <div className="eyebrow">
+            SONYA × SASHA
+          </div>
+
+          <h1>
+            НА ВКУС
+            <br />
+            <span>
+              СУДЬБЫ
+            </span>
+          </h1>
+
+          <p className="subtitle">
+            Войдите,
+            <br />
+            чтобы довериться
+            судьбе.
+          </p>
+
+          <form
+            onSubmit={
+              handleLogin
+            }
+            style={{
+              width: "100%",
+              maxWidth:
+                "380px",
+            }}
+          >
+
+            <div className="calendar-field">
+
+              <label
+                htmlFor="login-email"
+              >
+                EMAIL
+              </label>
+
+              <input
+                id="login-email"
+                type="email"
+                value={
+                  loginEmail
+                }
+                autoComplete="email"
+                placeholder="ваш email"
+                onChange={(
+                  event
+                ) =>
+                  setLoginEmail(
+                    event
+                      .target
+                      .value
+                  )
+                }
+              />
+
+            </div>
+
+            <div className="calendar-field">
+
+              <label
+                htmlFor="login-password"
+              >
+                ПАРОЛЬ
+              </label>
+
+              <input
+                id="login-password"
+                type="password"
+                value={
+                  loginPassword
+                }
+                autoComplete="current-password"
+                placeholder="••••••••"
+                onChange={(
+                  event
+                ) =>
+                  setLoginPassword(
+                    event
+                      .target
+                      .value
+                  )
+                }
+              />
+
+            </div>
+
+            {loginError && (
+              <p
+                style={{
+                  fontSize:
+                    "12px",
+                  lineHeight:
+                    1.5,
+                  marginTop:
+                    "14px",
+                }}
+              >
+                {loginError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="destiny-button"
+              disabled={
+                loginBusy
+              }
+            >
+              {loginBusy
+                ? "ВХОДИМ..."
+                : "ВОЙТИ →"}
+            </button>
+
+          </form>
+
+          <p className="hint">
+            только Соня × Саша
+          </p>
+
+        </section>
+
+      </main>
+    );
+  }
+
+  /* ============================================
+     MAIN
+  ============================================ */
+
   return (
     <main className="app">
+
+      {/* HOME */}
 
       {screen === "home" && (
         <section className="home">
@@ -487,7 +1709,9 @@ function App() {
           <h1>
             НА ВКУС
             <br />
-            <span>СУДЬБЫ</span>
+            <span>
+              СУДЬБЫ
+            </span>
           </h1>
 
           <p className="subtitle">
@@ -496,11 +1720,45 @@ function App() {
             Вы доверяетесь.
           </p>
 
+          {profile && (
+            <p
+              style={{
+                margin:
+                  "-20px 0 18px",
+                fontSize:
+                  "9px",
+                letterSpacing:
+                  "2px",
+                textTransform:
+                  "uppercase",
+                opacity: 0.45,
+              }}
+            >
+              {profile.display_name}
+
+              {(
+                profile.role ===
+                  "sonya"
+                  ? sonyaWins
+                  : sashaWins
+              ) > 3
+                ? " · ✨ любимчик судьбы"
+                : ""}
+            </p>
+          )}
+
           <button
-            onClick={startDestiny}
+            onClick={
+              startDestiny
+            }
             className="destiny-button"
+            disabled={
+              syncLoading
+            }
           >
-            ОТДАТЬСЯ СУДЬБЕ
+            {activeSession
+              ? "ПРОДОЛЖИТЬ СВИДАНИЕ"
+              : "ОТДАТЬСЯ СУДЬБЕ"}
           </button>
 
           <button
@@ -512,26 +1770,29 @@ function App() {
             🌍 НАША КАРТА
           </button>
 
+          {syncError && (
+            <p>
+              {syncError}
+            </p>
+          )}
+
           <p className="hint">
             кухня · ресторан · задание
           </p>
 
-        <p
-  style={{
-    marginTop: "20px",
-    padding: "10px 14px",
-    border: "1px solid #1d1d1b",
-    borderRadius: "12px",
-    fontSize: "12px",
-    opacity: 1,
-    background: "#fff",
-  }}
->
-  {supabaseStatus}
-</p>
+          <button
+            onClick={
+              handleLogout
+            }
+            className="text-button"
+          >
+            выйти
+          </button>
 
         </section>
       )}
+
+      {/* MAP */}
 
       {screen === "map" && (
         <WorldMap
@@ -541,8 +1802,121 @@ function App() {
         />
       )}
 
+      {/* WILDCARD */}
+
+      {screen ===
+        "wildcard" &&
+        activeSession && (
+          <section className="result">
+
+            <div className="eyebrow">
+              ⚠️ ВЫ ВЫТАЩИЛИ
+              ДИКУЮ КАРТУ
+            </div>
+
+            <div className="emoji">
+              {currentWildcard
+                ?.emoji ||
+                "🃏"}
+            </div>
+
+            <h2>
+              {currentWildcard
+                ?.category ||
+                "ДИКАЯ КАРТА"}
+            </h2>
+
+            <div className="mood">
+              {currentWildcard
+                ?.name ||
+                activeSession
+                  .wildcard_name}
+            </div>
+
+            {currentWildcard
+              ?.subtitle && (
+              <div className="fact">
+                <p>
+                  {
+                    currentWildcard
+                      .subtitle
+                  }
+                </p>
+              </div>
+            )}
+
+            {currentWildcard
+              ?.description && (
+              <div className="info-block">
+                <span>
+                  ЧТО ПРОИСХОДИТ
+                </span>
+
+                <p>
+                  {
+                    currentWildcard
+                      .description
+                  }
+                </p>
+              </div>
+            )}
+
+            {currentWildcard
+              ?.budget && (
+              <div className="fact">
+                <span>
+                  БЮДЖЕТ
+                </span>
+
+                <p>
+                  {
+                    currentWildcard
+                      .budget
+                  }
+                </p>
+              </div>
+            )}
+
+            <div className="task">
+              <span>
+                ВАШЕ ЗАДАНИЕ
+              </span>
+
+              <strong>
+                {activeSession.task}
+              </strong>
+            </div>
+
+            {currentWildcard
+              ?.place?.maps && (
+              <a
+                href={
+                  currentWildcard
+                    .place.maps
+                }
+                target="_blank"
+                rel="noreferrer"
+                className="secondary-button"
+              >
+                🗺️ ОТКРЫТЬ МЕСТО
+              </a>
+            )}
+
+            <button
+              onClick={restart}
+              className="destiny-button"
+            >
+              ДИКАЯ КАРТА ПРИНЯТА
+            </button>
+
+          </section>
+        )}
+
+      {/* CUISINE RESULT */}
+
       {screen === "result" &&
-        cuisine && (
+        activeSession &&
+        currentCuisine && (
           <section className="result">
 
             <div className="eyebrow">
@@ -550,15 +1924,24 @@ function App() {
             </div>
 
             <div className="emoji">
-              {cuisine.emoji}
+              {
+                currentCuisine
+                  .emoji
+              }
             </div>
 
             <h2>
-              {cuisine.name}
+              {
+                currentCuisine
+                  .name
+              }
             </h2>
 
             <div className="mood">
-              {cuisine.mood}
+              {
+                currentCuisine
+                  .mood
+              }
             </div>
 
             <div className="info-block">
@@ -567,7 +1950,10 @@ function App() {
               </span>
 
               <p>
-                {cuisine.description}
+                {
+                  currentCuisine
+                    .description
+                }
               </p>
             </div>
 
@@ -577,27 +1963,38 @@ function App() {
               </span>
 
               <p>
-                {fact}
+                {
+                  activeSession
+                    .fact
+                }
               </p>
             </div>
 
             <div className="dishes">
+
               <span>
                 ЧТО ПОПРОБОВАТЬ
               </span>
 
               <div className="dish-list">
-                {cuisine.dishes.map(
-                  (dish) => (
-                    <div
-                      key={dish}
-                      className="dish"
-                    >
-                      {dish}
-                    </div>
-                  )
-                )}
+
+                {currentCuisine
+                  .dishes
+                  .map(
+                    (dish) => (
+                      <div
+                        key={
+                          dish
+                        }
+                        className="dish"
+                      >
+                        {dish}
+                      </div>
+                    )
+                  )}
+
               </div>
+
             </div>
 
             <div className="task">
@@ -606,35 +2003,37 @@ function App() {
               </span>
 
               <strong>
-                {task}
+                {
+                  activeSession
+                    .task
+                }
               </strong>
             </div>
 
             <button
               onClick={() =>
-                setScreen("restaurant")
+                setScreen(
+                  "restaurant"
+                )
               }
               className="secondary-button"
             >
-              ПОКАЗАТЬ РЕСТОРАНЫ →
-            </button>
-
-            <button
-              onClick={restart}
-              className="text-button"
-            >
-              бросить судьбу ещё раз
+              ВЫБРАТЬ РЕСТОРАН →
             </button>
 
           </section>
         )}
 
-      {screen === "restaurant" &&
-        cuisine && (
+      {/* RESTAURANTS */}
+
+      {screen ===
+        "restaurant" &&
+        currentCuisine &&
+        activeSession && (
           <section className="result">
 
             <div className="eyebrow">
-              СУДЬБА ДОВЕЛА ДО СТОЛА
+              ВЫБОР ЗА ВАМИ
             </div>
 
             <div className="emoji">
@@ -648,209 +2047,276 @@ function App() {
             </h2>
 
             <p>
-              Три места.
+              Ваш выбор
+              останется тайным,
               <br />
-              Один вечер.
+              пока второй
+              не сделает свой.
             </p>
 
             <div className="restaurants">
-              {cuisine.restaurants.map(
-                (
-                  restaurant,
-                  index
-                ) => (
-                  <div
-                    key={restaurant.id}
-                    className="restaurant-card"
-                    onClick={() =>
-                      chooseRestaurant(
-                        restaurant
-                      )
-                    }
-                  >
-                    <div className="restaurant-number">
-                      0{index + 1}
-                    </div>
 
-                    <div className="restaurant-info">
-                      <strong>
-                        {
-                          restaurant.name
-                        }
-                      </strong>
+              {currentCuisine
+                .restaurants
+                .map(
+                  (
+                    restaurant,
+                    index
+                  ) => (
+                    <div
+                      key={
+                        restaurant.id
+                      }
+                      className="restaurant-card"
+                      onClick={() =>
+                        chooseRestaurant(
+                          restaurant
+                        )
+                      }
+                      style={{
+                        opacity:
+                          myRestaurantId &&
+                          myRestaurantId !==
+                            restaurant.id
+                            ? 0.45
+                            : 1,
+                      }}
+                    >
 
-                      <span>
-                        {
-                          restaurant.address
-                        }
-                      </span>
-                    </div>
+                      <div className="restaurant-number">
+                        0
+                        {index +
+                          1}
+                      </div>
 
-                    <div className="restaurant-arrow">
-                      →
+                      <div className="restaurant-info">
+
+                        <strong>
+                          {
+                            restaurant
+                              .name
+                          }
+                        </strong>
+
+                        <span>
+                          {
+                            restaurant
+                              .address
+                          }
+                        </span>
+
+                      </div>
+
+                      <div className="restaurant-arrow">
+                        {myRestaurantId ===
+                        restaurant.id
+                          ? "✓"
+                          : "→"}
+                      </div>
+
                     </div>
-                  </div>
-                )
-              )}
+                  )
+                )}
+
             </div>
 
-            <button
-              onClick={() =>
-                setScreen("choice")
-              }
-              className="secondary-button"
-            >
-              МЫ ВЫБРАЛИ →
-            </button>
+            {myRestaurantId &&
+              !otherRestaurantId && (
+              <div className="task">
 
-            <button
-              onClick={restart}
-              className="text-button"
-            >
-              начать заново
-            </button>
+                <span>
+                  ВАШ ВЫБОР
+                  СОХРАНЁН
+                </span>
+
+                <strong>
+                  Теперь ждём,
+                  когда второй
+                  сделает свой выбор.
+                </strong>
+
+              </div>
+            )}
+
+            {myRestaurantId &&
+              !otherRestaurantId && (
+              <p className="hint">
+                выбор второго
+                пока скрыт
+              </p>
+            )}
 
           </section>
         )}
+
+      {/* RESULT OF RESTAURANT CHOICE */}
 
       {screen ===
-        "restaurant-confirm" &&
-        cuisine &&
-        selectedRestaurant && (
+        "choice" &&
+        currentCuisine &&
+        finalRestaurant &&
+        activeSession && (
           <section className="result">
 
             <div className="eyebrow">
-              ВЫ ВЫБРАЛИ
+              {activeSession
+                .winner ===
+              "match"
+                ? "❤️ СОВПАДЕНИЕ"
+                : "🎲 СУДЬБА РЕШИЛА"}
             </div>
 
             <div className="emoji">
-              🍽️
+              {activeSession
+                .winner ===
+              "match"
+                ? "❤️"
+                : "🎲"}
             </div>
 
             <h2>
-              {
-                selectedRestaurant.name
-              }
+              {activeSession
+                .winner ===
+              "match"
+                ? "ВЫ ВЫБРАЛИ ОДНО"
+                : "МНЕНИЯ РАЗДЕЛИЛИСЬ"}
             </h2>
 
-            <p>
-              {
-                selectedRestaurant.address
-              }
-            </p>
-
-            <a
-              href={
-                selectedRestaurant.maps
-              }
-              target="_blank"
-              rel="noreferrer"
-              className="secondary-button"
-            >
-              ОТКРЫТЬ НА КАРТЕ →
-            </a>
-
-            <div className="task">
-              <span>
-                КУХНЯ
-              </span>
-
-              <strong>
-                {cuisine.emoji}{" "}
-                {cuisine.name}
-              </strong>
-            </div>
-
-            <button
-              onClick={() =>
-                setScreen("choice")
-              }
-              className="destiny-button"
-            >
-              ПРОДОЛЖИТЬ →
-            </button>
-
-            <button
-              onClick={() =>
-                setScreen("restaurant")
-              }
-              className="text-button"
-            >
-              выбрать другой ресторан
-            </button>
-
-          </section>
-        )}
-
-      {screen === "choice" &&
-        cuisine && (
-          <section className="result">
-
-            <div className="eyebrow">
-              СУДЬБА СМОТРИТ
-            </div>
-
-            <div className="emoji">
-              🎲
-            </div>
-
-            <h2>
-              ВЫБОР
-              <br />
-              СДЕЛАН
-            </h2>
-
-            <p>
-              Теперь осталось
-              решить,
-              <br />
-              когда именно
-              вы идёте.
-            </p>
+            {activeSession
+              .winner ===
+            "match" ? (
+              <p>
+                Вы оба выбрали
+                одно место.
+                <br />
+                Судьбе даже
+                не пришлось
+                вмешиваться.
+              </p>
+            ) : (
+              <p>
+                Вы выбрали
+                разные места.
+                <br />
+                Поэтому последнее
+                слово осталось
+                за судьбой.
+              </p>
+            )}
 
             <div className="task">
+
               <span>
-                РЕСТОРАН
+                СОНЯ ВЫБРАЛА
               </span>
 
               <strong>
                 {
-                  selectedRestaurant?.name
+                  sonyaRestaurant
+                    ?.name
                 }
               </strong>
+
             </div>
 
-            <button
-              onClick={() =>
-                setScreen("calendar")
-              }
-              className="destiny-button"
-              disabled={
-                !selectedRestaurant
-              }
-            >
-              ВЫБРАТЬ ДАТУ →
-            </button>
+            <div className="task">
+
+              <span>
+                САША ВЫБРАЛ
+              </span>
+
+              <strong>
+                {
+                  sashaRestaurant
+                    ?.name
+                }
+              </strong>
+
+            </div>
+
+            <div className="fact">
+
+              <span>
+                ИТОГ
+              </span>
+
+              <p>
+                🍽️{" "}
+                <strong>
+                  {
+                    finalRestaurant
+                      .name
+                  }
+                </strong>
+              </p>
+
+            </div>
+
+            {activeSession
+              .resolved_by_fate &&
+              activeSession
+                .winner ===
+                "sonya" &&
+              sonyaWins > 3 && (
+                <div className="task">
+                  <span>
+                    ✨ ЛЮБИМЧИК
+                    СУДЬБЫ
+                  </span>
+
+                  <strong>
+                    Соня ·{" "}
+                    {sonyaWins} побед
+                    судьбы
+                  </strong>
+                </div>
+              )}
+
+            {activeSession
+              .resolved_by_fate &&
+              activeSession
+                .winner ===
+                "sasha" &&
+              sashaWins > 3 && (
+                <div className="task">
+                  <span>
+                    ✨ ЛЮБИМЧИК
+                    СУДЬБЫ
+                  </span>
+
+                  <strong>
+                    Саша ·{" "}
+                    {sashaWins} побед
+                    судьбы
+                  </strong>
+                </div>
+              )}
 
             <button
               onClick={() =>
-                setScreen("restaurant")
+                setScreen(
+                  "calendar"
+                )
               }
-              className="text-button"
+              className="destiny-button"
             >
-              изменить ресторан
+              ВЫБРАТЬ ДАТУ →
             </button>
 
           </section>
         )}
 
-      {screen === "calendar" &&
-        cuisine &&
-        selectedRestaurant && (
+      {/* CALENDAR */}
+
+      {screen ===
+        "calendar" &&
+        currentCuisine &&
+        finalRestaurant && (
           <section className="result">
 
             <div className="eyebrow">
-              СВИДАНИЕ НАЗНАЧЕНО
+              СВИДАНИЕ
+              НАЗНАЧЕНО
             </div>
 
             <div className="emoji">
@@ -864,13 +2330,18 @@ function App() {
             </h2>
 
             <p>
-              Выберите дату и время.
+              Выберите дату
+              и время.
               <br />
-              Остальное уже решено.
+              Остальное уже
+              решено.
             </p>
 
             <div className="calendar-field">
-              <label htmlFor="date">
+
+              <label
+                htmlFor="date"
+              >
                 ДАТА
               </label>
 
@@ -881,18 +2352,28 @@ function App() {
                 min={
                   new Date()
                     .toISOString()
-                    .split("T")[0]
+                    .split(
+                      "T"
+                    )[0]
                 }
-                onChange={(event) =>
+                onChange={(
+                  event
+                ) =>
                   setDate(
-                    event.target.value
+                    event
+                      .target
+                      .value
                   )
                 }
               />
+
             </div>
 
             <div className="calendar-field">
-              <label htmlFor="time">
+
+              <label
+                htmlFor="time"
+              >
                 ВРЕМЯ
               </label>
 
@@ -900,66 +2381,71 @@ function App() {
                 id="time"
                 type="time"
                 value={time}
-                onChange={(event) =>
+                onChange={(
+                  event
+                ) =>
                   setTime(
-                    event.target.value
+                    event
+                      .target
+                      .value
                   )
                 }
               />
+
             </div>
 
             <div className="task">
+
               <span>
-                В КАЛЕНДАРЬ ПОПАДЁТ
+                В КАЛЕНДАРЬ
+                ПОПАДЁТ
               </span>
 
               <strong>
-                🍽️ На вкус судьбы ·{" "}
-                {cuisine.name}
+                🍽️ На вкус
+                судьбы ·{" "}
+                {
+                  currentCuisine
+                    .name
+                }
 
                 <br />
                 <br />
 
                 {
-                  selectedRestaurant.name
+                  finalRestaurant
+                    .name
                 }
               </strong>
+
             </div>
 
             <button
-              onClick={addToCalendar}
+              onClick={
+                addToCalendar
+              }
               className="destiny-button"
               disabled={!date}
             >
-              📅 ДОБАВИТЬ В КАЛЕНДАРЬ
-            </button>
-
-            <p className="hint">
-              Событие откроется
-              на iPhone.
-            </p>
-
-            <button
-              onClick={() =>
-                setScreen(
-                  "restaurant-confirm"
-                )
-              }
-              className="text-button"
-            >
-              назад
+              📅 ДОБАВИТЬ
+              В КАЛЕНДАРЬ
             </button>
 
           </section>
         )}
 
-      {screen === "final" &&
-        cuisine &&
-        selectedRestaurant && (
+      {/* FINAL */}
+
+      {screen ===
+        "final" &&
+        currentCuisine &&
+        finalRestaurant &&
+        activeSession && (
           <section className="result">
 
             <div className="eyebrow">
-              СВИДАНИЕ НАЗНАЧЕНО
+              СВИДАНИЕ
+              НАЗНАЧЕНО
             </div>
 
             <div className="emoji">
@@ -972,74 +2458,68 @@ function App() {
               РЕШЕНО.
             </h2>
 
-            <p>
-              Теперь остаётся только
-              <br />
-              дождаться этого дня.
-            </p>
-
             <div className="task">
+
               <span>
                 ВАШ ВЕЧЕР
               </span>
 
               <strong>
-                {cuisine.emoji}{" "}
-                {cuisine.name}
+                {
+                  currentCuisine
+                    .emoji
+                }{" "}
+                {
+                  currentCuisine
+                    .name
+                }
 
                 <br />
                 <br />
 
                 🍽️{" "}
                 {
-                  selectedRestaurant.name
+                  finalRestaurant
+                    .name
                 }
 
                 <br />
                 <br />
 
-                📅 {date}
+                📅{" "}
+                {
+                  activeSession
+                    .date
+                }
 
                 <br />
 
-                🕐 {time}
+                🕐{" "}
+                {
+                  activeSession
+                    .time
+                }
               </strong>
-            </div>
 
-            <div className="task">
-              <span>
-                ВАШЕ ЗАДАНИЕ
-              </span>
-
-              <strong>
-                {task}
-              </strong>
             </div>
 
             <a
               href={
-                selectedRestaurant.maps
+                finalRestaurant
+                  .maps
               }
               target="_blank"
               rel="noreferrer"
               className="secondary-button"
             >
-              🗺️ ПОСМОТРЕТЬ РЕСТОРАН
+              🗺️ ПОСМОТРЕТЬ
+              РЕСТОРАН
             </a>
-
-            <button
-              onClick={() =>
-                setScreen("calendar")
-              }
-              className="secondary-button"
-            >
-              📅 ИЗМЕНИТЬ ДАТУ
-            </button>
 
             <button
               onClick={() => {
                 alert(
-                  "После свидания здесь появится ваш отзыв ❤️"
+                  "Следующим этапом подключим ваши отдельные отзывы ❤️"
                 );
               }}
               className="secondary-button"
@@ -1051,25 +2531,19 @@ function App() {
               onClick={restart}
               className="destiny-button"
             >
-              🎲 НОВОЕ СВИДАНИЕ
+              🎲 НОВОЕ
+              СВИДАНИЕ
             </button>
 
             <button
               onClick={() =>
-                setScreen("map")
+                setScreen(
+                  "map"
+                )
               }
               className="secondary-button"
             >
               🌍 НАША КАРТА
-            </button>
-
-            <button
-              onClick={() =>
-                setScreen("home")
-              }
-              className="text-button"
-            >
-              на главную
             </button>
 
           </section>
