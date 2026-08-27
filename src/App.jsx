@@ -365,6 +365,11 @@ function App() {
   ] = useState("");
 
   const [
+    customHistoryRestaurant,
+    setCustomHistoryRestaurant,
+  ] = useState("");
+
+  const [
     historyDate,
     setHistoryDate,
   ] = useState("");
@@ -941,6 +946,7 @@ function App() {
     setHistoryMode(null);
     setHistoryCuisine(null);
     setHistoryRestaurant("");
+    setCustomHistoryRestaurant("");
     setHistoryDate("");
     setHistoryRating(5);
     setHistoryReview("");
@@ -961,6 +967,7 @@ function App() {
     );
 
     setHistoryRestaurant("");
+    setCustomHistoryRestaurant("");
     setHistoryDate("");
     setHistoryRating(5);
     setHistoryReview("");
@@ -974,6 +981,7 @@ function App() {
 
     setHistoryCuisine(null);
     setHistoryRestaurant("");
+    setCustomHistoryRestaurant("");
     setHistoryDate("");
     setHistoryRating(5);
     setHistoryReview("");
@@ -1004,9 +1012,14 @@ function App() {
             historyRestaurant
         );
 
-    if (!restaurant) {
+    const restaurantName =
+      historyRestaurant === "custom"
+        ? customHistoryRestaurant.trim()
+        : restaurant?.name;
+
+    if (!restaurantName) {
       setSyncError(
-        "Выберите ресторан."
+        "Укажите ресторан."
       );
 
       setHistorySaving(false);
@@ -1029,7 +1042,7 @@ function App() {
           historyCuisine.name,
 
         restaurant_name:
-          restaurant.name,
+          restaurantName,
 
         rating:
           historyRating,
@@ -1123,8 +1136,7 @@ function App() {
     ) {
       if (
         activeSession
-          .result_type ===
-        "wildcard"
+          .wildcard_id
       ) {
         setScreen(
           "wildcard"
@@ -1189,7 +1201,7 @@ function App() {
             )
           ];
 
-      payload = {
+      const payload = {
         status:
           "cuisine_selected",
 
@@ -1213,7 +1225,6 @@ function App() {
         task:
           randomTask,
       };
-    }
 
     const {
       data,
@@ -1243,18 +1254,9 @@ function App() {
       data
     );
 
-    if (
-      data.result_type ===
-      "wildcard"
-    ) {
-      setScreen(
-        "wildcard"
-      );
-    } else {
-      setScreen(
-        "result"
-      );
-    }
+    setScreen(
+      "result"
+    );
 
     setSyncLoading(false);
   }
@@ -1470,19 +1472,7 @@ function App() {
     let winner;
     let chosen;
     let byFate;
-const wildcardWins =
-  wildcards.length > 0 &&
-  Math.random() < 0.05;
 
-const wildcard =
-  wildcardWins
-    ? wildcards[
-        Math.floor(
-          Math.random() *
-            wildcards.length
-        )
-      ]
-    : null;
     if (
       sonyaChoice.id ===
       sashaChoice.id
@@ -1507,6 +1497,20 @@ const wildcard =
 
       byFate = true;
     }
+
+    const wildcardWins =
+      wildcards.length > 0 &&
+      Math.random() < 0.05;
+
+    const wildcard =
+      wildcardWins
+        ? wildcards[
+            Math.floor(
+              Math.random() *
+                wildcards.length
+            )
+          ]
+        : null;
 
     const {
       data,
@@ -2624,15 +2628,18 @@ loadWinnerStats();
                   value={
                     historyRestaurant
                   }
-                  onChange={(
-                    event
-                  ) =>
+                  onChange={(event) => {
                     setHistoryRestaurant(
-                      event
-                        .target
-                        .value
-                    )
-                  }
+                      event.target.value
+                    );
+
+                    if (
+                      event.target.value !==
+                      "custom"
+                    ) {
+                      setCustomHistoryRestaurant("");
+                    }
+                  }}
                 >
                   <option value="">
                     Выберите ресторан
@@ -2658,7 +2665,27 @@ loadWinnerStats();
                         </option>
                       )
                     )}
+
+                  <option value="custom">
+                    ＋ Другой ресторан
+                  </option>
                 </select>
+
+                {historyRestaurant ===
+                  "custom" && (
+                  <input
+                    type="text"
+                    value={
+                      customHistoryRestaurant
+                    }
+                    placeholder="Название ресторана"
+                    onChange={(event) =>
+                      setCustomHistoryRestaurant(
+                        event.target.value
+                      )
+                    }
+                  />
+                )}
 
               </div>
             )}
@@ -2816,6 +2843,11 @@ loadWinnerStats();
               disabled={
                 !historyCuisine ||
                 !historyRestaurant ||
+                (
+                  historyRestaurant ===
+                    "custom" &&
+                  !customHistoryRestaurant.trim()
+                ) ||
                 !historyDate ||
                 historySaving
               }
